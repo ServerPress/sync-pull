@@ -102,132 +102,6 @@ SyncDebug::log(' - no error, setting success');
 			}
 else SyncDebug::log(' - error code: ' . $api_response->get_error_code());
 			return TRUE;			// return, signlaing that we've handled the request
-
-########
-			// TODO: use a better variable name than $sync
-			$sync = $model->get_sync_data($post_id);
-			$source_post_id = $sync->target_content_id;
-SyncDebug::log(__METHOD__.'():' . __LINE__.' source post=' . $source_post_id);
-
-			// TODO: remove $request
-			$response = $request = $api->api('pullcontent', array('post_id' => $source_post_id));
-
-SyncDebug::log(__METHOD__.'():' . __LINE__.' request=' . var_export($response, TRUE));
-			$resp->success(FALSE);
-
-			// TODO: move all the work into a SyncPullApiModel class that leverages the SyncApiController / SyncApiModel classes
-
-			if (isset($response->result['body'])) {
-				$response_body = json_decode($response->result['data']);
-				if (0 !== $response_body->error_code) {
-					// return API error code to AJAX caller
-					$resp->error_code($response_body->error_code);
-					$resp->send();
-				}
-			}
-
-SyncDebug::log(__METHOD__.'():' . __LINE__ . ' response body=' . var_export($response_body, TRUE));
-
-			if (0 === $post_id) {
-SyncDebug::log(__METHOD__.'():' . __LINE__.' no post id provided');
-				$resp->error(__('This post has not been Sync\'d yet.', 'wpsitesync-pull'));
-			} else if (is_wp_error($request)) {
-SyncDebug::log(__METHOD__.'():' . __LINE__.' API Error: ' . $request->get_error_message());
-				$resp->error($request->get_error_message());
-			} else {
-//				$pull_content = $request->data->content;
-//				$source_post = $pull_content->post_data;
-				$source_post = $response_body->post_data;
-
-SyncDebug::log(__METHOD__.'():' . __LINE__.' source post=' . var_export($source_post, TRUE));
-
-				// TODO: look for request->error_code
-				$resp->success(TRUE);
-				// TODO: need to update post content
-//				$source_post->post_content = str_replace($this->post('origin'), $url['host'], $source_post->post_content);
-//				// TODO: check if we need to update anything else like `guid`, `post_excerpt`, `post_content_filtered`
-//				// JOSE - `guid`, `post_excerpt`, `post_content_filtered` are in $source_post (line 70)
-
-				$source_post->ID = $post_id;
-SyncDebug::log(__METHOD__.'():' . __LINE__ . ' source post id=' . $post_id);
-				$ret = wp_update_post($source_post, TRUE);
-				if (is_wp_error($ret)) {
-SyncDebug::log(__METHOD__.'():' . __LINE__.' WP_Error: ' . $ret->get_error_message());
-					$resp->notice_code(SyncApiRequest::NOTICE_INTERNAL_ERROR, $ret->get_error_message());
-					$resp->notice(__('WP Error: ', 'wpsitesync-pull') . $ret->get_error_message());
-				} else {
-					// update post meta
-					$post_meta = $request->data->content->post_meta;
-
-					// update postmeta records from Target
-					// TODO: need to handle deletes of postmeta - postmeta records that no longer exist on Target but do on Source
-					// TODO: probably better to remove all post meta, then add_post_meta() for each record from Target
-					// TODO: also check that this is the process on Target when doing push operations
-					foreach ($post_meta as $meta_key => $meta)
-						foreach ($meta as $meta_value)
-							update_post_meta($post_id, $meta_key, $meta_value);
-
-SyncDebug::log(__METHOD__.'() checking for image / attachments');
-					// handle pulling image data / attachments from Target
-					// TODO: this should be moved into it's own method so it easier to look at
-					require_once(ABSPATH . 'wp-admin/includes/image.php');
-					if (!function_exists('wp_handle_upload'))
-					    require_once(ABSPATH . 'wp-admin/includes/file.php');
-
-					if (isset($pull_content->post_media) && !empty($pull_content->post_media)) {
-						$media = $pull_content->post_media;
-						foreach ($media as $attach_id => $attachment) {
-SyncDebug::log(__METHOD__.'() id=' . var_export($attach_id, TRUE) . ' attach=' . var_export($attachment, TRUE));
-							$rec = $model->get_sync_target_data($attach_id);
-SyncDebug::log(__METHOD__.'() rec=' . var_export($rec, TRUE));
-							if (NULL === $rec) {
-								// does not already exist - create a new attachment
-SyncDebug::log(__METHOD__.'() adding media information:');
-								// determine where to put the downloaded file
-								$upload_dir = wp_upload_dir();
-								$path = $upload_dir['basedir'] . $upload_dir['subdir'] . DIRECTORY_SEPARATOR;
-								$filename = $path . basename(parse_url($attachment->guid, PHP_URL_PATH));
-								$filename = str_replace('\\', '/', $filename);
-
-								// download the file from Target using the guid as the path to the file
-SyncDebug::log(__METHOD__.'() downloading ' . $attachment->guid);
-								$res = wp_remote_get($attachment->guid);
-								$body = wp_remote_retrieve_body($res);
-SyncDebug::log(__METHOD__.'() res=' . var_export($res, TRUE) . ' bodylen=' . strlen($body));
-								$ret = file_put_contents($filename, $body);
-SyncDebug::log(__METHOD__.'() line ' . __LINE__ . ' ret' . var_export($ret, TRUE));
-SyncDebug::log(__METHOD__.'() created temp file ' . $filename);
-
-								// build an array that represents the new attachment
-								$new_attach = json_decode(json_encode($attachment),TRUE);
-SyncDebug::log(' - upload basedir=' . $upload_dir['basedir']);
-SyncDebug::log(' - upload baseurl=' . $upload_dir['baseurl']);
-								$new_attach['guid'] = str_replace('\\', '/', str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $filename));
-								$new_attach['post_parent'] = $post_id;
-								unset($new_attach['ID']);
-//								$new_id = wp_insert_post($new_attach);
-								$new_id = wp_insert_attachment($new_attach, $filename, $post_id);
-								if (!is_wp_error($new_id))
-									media_handle_upload($new_id, wp_generate_attachment_metadata($new_id, $filename));
-SyncDebug::log(__METHOD__.'() line ' . __LINE__ . ' new id ' . $new_id);
-
-								// TODO: create the different image sizes
-
-								// TODO: add to wp_spectrom_sync table
-							} else {
-								// TODO: handle updates
-							}
-						}
-					}
-					// this hook allows for updating of any additional data associated with content, such as comments and app specific data
-					do_action('spectrom_sync_update_source_content', $post_id, $request->data->content);
-
-SyncDebug::log(__METHOD__.'():' . __LINE__.' success!');
-					$resp->notice_code(SyncApiRequest::NOTICE_CONTENT_SYNCD);
-//					$resp->notice(__('Content synchronized.', 'wpsitesync-pull'));
-				}
-			}
-			// TODO: rename AJAX call to 'pull_check_modified_timestamp'
 		} else if ('check_modified_timestamp' === $operation) {
 			$found = TRUE;
 
@@ -289,7 +163,7 @@ SyncDebug::log(__METHOD__.'() data has not been previously syncd');
 
 		// TODO: move the part that does the actual work into a SyncPullApiRequest class - make it easier for unit testing
 		$api = new SyncApiRequest();
-		$options = SyncOptions::get_all(); // get_option(SyncOptions::OPTION_NAME);
+		$options = SyncOptions::get_all();
 
 		// get the post id on the Target for Source post_id
 SyncDebug::log(__METHOD__.'() sync data: ' . var_export($sync_data, TRUE));
