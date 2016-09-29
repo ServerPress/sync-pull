@@ -528,7 +528,8 @@ SyncDebug::log(__METHOD__."() set_post_thumbnail({$source_post_id}, {$attach_id}
 
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' removing work file ' . $path . ' and temp file ' . $temp_name);
 				unlink($path);
-				unlink($temp_name);
+				if (file_exists($temp_name))
+					unlink($temp_name);
 			}
 		}
 
@@ -646,8 +647,8 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($respon
 		{
 			WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
 			switch ($code) {
-			case SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND:	$message = __('Content cannot be found on Target site', 'wpsitesync-pull'); break;
-			case SyncPullApiRequest::ERROR_POST_NOT_FOUND:			$message = __('The post cannot be found', 'wpsitesync-pull'); break;
+			case SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND:	$message = __('Matching Content cannot be found on Target site. Please Push first.', 'wpsitesync-pull'); break;
+			case SyncPullApiRequest::ERROR_POST_NOT_FOUND:			$message = __('The post cannot be found.', 'wpsitesync-pull'); break;
 			}
 			return $message;
 		}
