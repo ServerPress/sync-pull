@@ -560,6 +560,10 @@ SyncDebug::log(__METHOD__.'() ' . var_export($info, TRUE));
 		{
 SyncDebug::log(__METHOD__."('{$dir}', '{$name}', '{$ext}')");
 			// this forces re-use of uploaded image names #54
+			if (FALSE !== stripos($name, $ext)) {
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' returning "' . $name . '"');
+				return $name;
+			}
 			return $name . $ext;
 		}
 
