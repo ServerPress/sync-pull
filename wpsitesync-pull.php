@@ -5,7 +5,7 @@ Plugin URI: http://wpsitesync.com
 Description: Allow Content Creators to "Pull" Content from the Target site into the Source site.
 Author: WPSiteSync
 Author URI: http://wpsitesync.com
-Version: 1.1
+Version: 1.2
 Text Domain: wpsitesync-pull
 
 The PHP code portions are distributed under the GPL license. If not otherwise stated, all
@@ -28,7 +28,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		private static $_instance = NULL;
 
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
-		const PLUGIN_VERSION = '1.1';
+		const PLUGIN_VERSION = '1.2';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31'; // '1a127f14595c88504b22839abc40708c';
 
 		private $_license = NULL;
@@ -577,7 +577,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' returning "' . $name . '"');
 		{
 			if (NULL !== $this->_push_controller && 'push' === $this->_push_controller->parent_action) {
 				// add image information into the data array of the Push rather than handling as separate 'upload_media' API requests
-				
+
 			}
 		}
 
