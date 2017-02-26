@@ -436,7 +436,8 @@ SyncDebug::log(__METHOD__.'() temp name=' . $temp_name);
 				$img_type = wp_check_filetype($path);
 				$mime_type = $img_type['type'];
 SyncDebug::log(__METHOD__.'() found image type=' . $img_type['ext'] . '=' . $img_type['type']);
-				if (FALSE === strpos($mime_type, 'image/') && 'pdf' !== $img_type['ext']) {
+			if ((FALSE === strpos($mime_type, 'image/') && 'pdf' !== $img_type['ext']) ||
+				apply_filters('spectrom_sync_upload_media_allowed_mime_type', FALSE, $img_type)) {
 					$response->error_code(SyncApiRequest::ERROR_INVALID_IMG_TYPE);
 					$response->send();
 				}
@@ -467,6 +468,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' attach id=' . $attachment_id);
 
 				// check if attachment exists
 				if (0 !== $attachment_id) {
+					$this->media_id = $attachment_id;
 					// TODO: check if files need to be updated / replaced / deleted
 					// TODO: handle overwriting/replacing image files of the same name
 					// if it's the featured image, set that
@@ -516,6 +518,7 @@ SyncDebug::log(__METHOD__."() wp_insert_attachment([..., '{$file['file']}', {$so
 SyncDebug::log(__METHOD__."() wp_generate_attachment_metadata({$attach_id}, '{$file['file']}') returned " . var_export($attach, TRUE));
 						update_post_meta($attach_id, '_wp_attachment_image_alt', $media_file['attach_alt'], TRUE);
 						wp_update_attachment_metadata($attach_id, $attach);
+						$this->media_id = $attach_id;
 
 						// if it's the featured image, set that
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' featured=' . $featured . ' source=' . $source_post_id . ' attach=' . $attach_id);
@@ -530,6 +533,9 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' removing work file ' . $path . ' 
 				unlink($path);
 				if (file_exists($temp_name))
 					unlink($temp_name);
+
+				// notify add-ons about media
+				do_action('spectrom_sync_media_processed', $source_post_id, $attachment_id, $this->media_id);
 			}
 		}
 
