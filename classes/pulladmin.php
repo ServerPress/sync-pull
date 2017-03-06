@@ -11,11 +11,11 @@ class SyncPullAdmin
 
 	private function __construct()
 	{
-		add_filter('spectrom_sync_ajax_operation', array(&$this, 'check_ajax_query'), 10, 3);
+		add_filter('spectrom_sync_ajax_operation', array($this, 'check_ajax_query'), 10, 3);
 
-		add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
-		add_action('spectrom_sync_metabox_after_button', array(&$this, 'add_pull_to_metabox'), 10, 1);
-		add_action('spectrom_sync_ui_messages', array(&$this, 'add_pull_ui_messages'));
+		add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+		add_action('spectrom_sync_metabox_after_button', array($this, 'add_pull_to_metabox'), 10, 1);
+		add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
 	}
 
 	/*
@@ -51,7 +51,7 @@ class SyncPullAdmin
 	public function check_ajax_query($found, $operation, SyncApiResponse $resp)
 	{
 SyncDebug::log(__METHOD__.'() operation="' . $operation . '"');
-		$lic = new SyncLicensing();
+		$lic = WPSiteSyncContent::get_instance()->get_license(); // new SyncLicensing();
 		if (!$lic->check_license('sync_pull', WPSiteSync_Pull::PLUGIN_KEY, WPSiteSync_Pull::PLUGIN_NAME))
 			return $found;
 
@@ -137,13 +137,13 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - api() response for "pull": ' . 
 	public function add_pull_to_metabox($error)
 	{
 SyncDebug::log(__METHOD__.'(error=' . var_export($error, TRUE) . ')');
-		$lic = new SyncLicensing();
+		$lic = WPSiteSyncContent::get_instance()->get_license(); // new SyncLicensing();
 		if ($error || !$lic->check_license('sync_pull', WPSiteSync_Pull::PLUGIN_KEY, WPSiteSync_Pull::PLUGIN_NAME))
 			return;
 		// check configuration to see if we can talk to the target
-		$auth = abs(SyncOptions::get('auth', '0'));
+		$auth = SyncOptions::is_auth(); // abs(SyncOptions::get('auth', '0'));
 		$target = SyncOptions::get('host', '');
-		if (1 !== $auth || empty($target))
+		if (!$auth || empty($target))
 			return;
 
 		global $post;
