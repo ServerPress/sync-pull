@@ -17,6 +17,7 @@ class SyncPullAdmin
 		add_action('spectrom_sync_metabox_after_button', array($this, 'add_pull_to_metabox'), 10, 1);
 		add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
 		add_action('admin_footer', array($this, 'add_dialog_modal'));
+		add_action('admin_print_scripts-edit.php', array($this, 'print_hidden_div'));
 	}
 
 	/*
@@ -35,10 +36,10 @@ class SyncPullAdmin
 	 */
 	public function admin_enqueue_scripts($hook_suffix)
 	{
-		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync', 'jquery', 'jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
+		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync', 'jquery', 'underscore', 'jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
 		wp_register_style('sync-pull', WPSiteSync_Pull::get_asset('css/sync-pull.css'), array('wp-jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION);
 
-		if ('post.php' === $hook_suffix) {
+		if ('post.php' === $hook_suffix || 'edit.php' === $hook_suffix) {
 			wp_enqueue_script('sync-pull');
 			wp_enqueue_style('sync-pull');
 		}
@@ -266,7 +267,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 		$screen = get_current_screen();
 
 		// if on the post.php screen
-		if (is_object($screen) && 'post' === $screen->base) {
+		if (is_object($screen) && ('post' === $screen->base || 'edit' === $screen->base)) {
 			global $post;
 
 			// @todo move into view?
@@ -320,9 +321,15 @@ echo '<div id="sync-pull-id-#" class="sync-pull-row">
 			echo '<div id="sync-pull-messages"></div>';
 
 			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
-			echo ' &nbsp; <input type="radio" id="sync-pull-current" checked="checked">';
-			echo __('Pull Content into current Post', 'wpsitesync-pull');
-			echo ' &nbsp; <input type="radio" id="sync-pull-new">';
+			if ('post' === $screen->base) {
+				echo ' &nbsp; <input type="radio" id="sync-pull-current" checked="checked">';
+				echo __('Pull Content into current Post', 'wpsitesync-pull');
+			}
+			echo ' &nbsp; <input type="radio" id="sync-pull-new"';
+			if ('edit' === $screen->base) {
+				echo ' checked="checked"';
+			}
+			echo '>';
 			echo __('Pull into new Post', 'wpsitesync-pull');
 			echo ' &nbsp; <button id="sync-pull-selected" type="button" onclick="wpsitesynccontent.pull.pull(';
 			if (0 !== $target_post_id) {
@@ -332,6 +339,24 @@ echo '<div id="sync-pull-id-#" class="sync-pull-row">
 
 			echo '</p></div>'; // close dialog HTML
 		}
+	}
+
+	/**
+	 * Prints hidden button ui div
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function print_hidden_div()
+	{
+		?>
+		<div id="sync-pull-search-ui" style="display:none">
+			<button class="sync-pull button sync-button button-primary" onclick="wpsitesynccontent.pull.show_dialog()"
+			 type="button" title="<?php esc_html_e('Search to Pull Content from the Target site', 'wpsitesync-pull'); ?>">
+			<?php esc_html_e('Search for Pull', 'wpsitesync-pull'); ?>
+			</button>
+		</div>
+		<?php
 	}
 }
 

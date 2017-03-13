@@ -166,6 +166,9 @@ console.log('sync-pull: checking content');
 wpsitesynccontent.pull = new WPSiteSyncContent_Pull();
 
 jQuery(document).ready(function () {
+
+    jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
+
 	jQuery('#sync-pull-cancel').on('click', function() {
         jQuery('#sync-pull-dialog').dialog('close');
 	});

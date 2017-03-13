@@ -54,3 +54,7 @@
 	clear: both;
 	margin: 1em;
 }
+
+#sync-pull-search-ui {
+	display: inline-block;
+}
