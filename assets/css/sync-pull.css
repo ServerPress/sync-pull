@@ -1,0 +1,56 @@
+#sync-pull-search-results {
+	max-height: 16em;
+	overflow: auto;
+}
+
+#sync-pull-results-header {
+	font-weight: bold;
+}
+
+#sync-pull-results-header:hover {
+	background: transparent;
+	cursor: default;
+}
+
+.sync-pull-row {
+	clear: both;
+	overflow: auto;
+}
+
+.sync-pull-row div {
+	float: left;
+	padding: 0.5em;
+}
+
+.sync-pull-row:hover {
+	background: #f2f2f2;
+	cursor: pointer;
+}
+
+.sync-pull-row.selected {
+	background: #e0e0e0;
+}
+
+.sync-pull-column-id {
+	width: 5%;
+}
+
+.sync-pull-column-title {
+	width: 20%;
+}
+
+.sync-pull-column-content {
+	width: 30%;
+}
+.sync-pull-column-modified {
+	width: 12%;
+}
+
+.sync-pull-column-author {
+	width: 12%;
+}
+
+#sync-pull-messages {
+	clear: both;
+	margin: 1em;
+}

@@ -16,6 +16,7 @@ class SyncPullAdmin
 		add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
 		add_action('spectrom_sync_metabox_after_button', array($this, 'add_pull_to_metabox'), 10, 1);
 		add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
+		add_action('admin_footer', array($this, 'add_dialog_modal'));
 	}
 
 	/*
@@ -34,9 +35,13 @@ class SyncPullAdmin
 	 */
 	public function admin_enqueue_scripts($hook_suffix)
 	{
-		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
-		if ('post.php' === $hook_suffix)
+		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync', 'jquery', 'jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
+		wp_register_style('sync-pull', WPSiteSync_Pull::get_asset('css/sync-pull.css'), array('wp-jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION);
+
+		if ('post.php' === $hook_suffix) {
 			wp_enqueue_script('sync-pull');
+			wp_enqueue_style('sync-pull');
+		}
 	}
 
 	/**
@@ -197,7 +202,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 */
 
 			// display the button that goes in the Metabox
-			echo '<button id="sync-pull-content" type="button" class="button button-primary sync-button btn-sync" onclick="wpsitesynccontent.pull.action(', $post->ID, ')" ';
+			echo '<button id="sync-pull-content" type="button" class="button button-primary sync-button btn-sync" onclick="wpsitesynccontent.pull.show_dialog(', $post->ID, ')" ';
 			if ($error)
 				echo ' disabled';
 			echo ' title="', __('Pull this Content from the Target site', 'wpsitesync-pull'), '" ';
@@ -249,6 +254,84 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 	{
 		echo '<span id="sync-msg-pull-working">', __('Pulling Content from Target...', 'wpsitesync-pull'), '</span>';
 		echo '<span id="sync-msg-pull-complete">', __('Pull Complete. Reloading Page...', 'wpsitesync-pull'), '</span>';
+	}
+
+	/**
+	 * Add the HTML for a jQuery Dialog modal
+	 *
+	 * @since 1.0.0
+	 */
+	public function add_dialog_modal()
+	{
+		$screen = get_current_screen();
+
+		// if on the post.php screen
+		if (is_object($screen) && 'post' === $screen->base) {
+			global $post;
+
+			// @todo move into view?
+			$post_type = get_post_type_object(get_post_type());
+			$title = sprintf(__('Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type->labels->singular_name, SyncOptions::get('host'));
+			$sync_model = new SyncModel();
+			$target_post_id = 0;
+
+			// display dialog HTML
+			echo '<div id="sync-pull-dialog" style="display:none" title="', esc_html($title), '">';
+			echo '<p>', esc_html__('Search for', 'wpsitesync-pull');
+			echo ' <input type="search" id="sync-pull-search" value=""></p>';
+
+			if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
+				// display associated content if it exists
+				$target_post_id = $sync_data->target_content_id;
+				$content_details = SyncAdmin::get_instance()->_get_content_details();
+				echo '<div id="sync-details">';
+				echo $content_details;
+				echo '</div>';    // contains content detail information
+			}
+
+
+//				$post_data = get_post($source_post_id, OBJECT);
+				echo '<div id="sync-pull-search-results" style="display:none"><p>Found x posts matching search:</p>';
+				echo '<div id="sync-pull-results-header" class="sync-pull-row">
+						<div class="sync-pull-column-id">', __('ID', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-title">', __('Title', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-content">', __('Content', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-modified">', __('Modified', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-author">', __('Author', 'wpsitesync-pull'), '</div>
+					</div>';
+//				echo '<div id="sync-pull-id-#" class="sync-pull-row">
+//						<div class="sync-pull-column-id">', esc_html($post_data->ID), '</div>
+//						<div class="sync-pull-column-title">', esc_html($post_data->post_title), '</div>
+//						<div class="sync-pull-column-content">', esc_html($post_data->post_excerpt), '</div>
+//						<div class="sync-pull-column-modified">', esc_html($post_data->post_modified), '</div>
+//						<div class="sync-pull-column-author">', esc_html($post_data->post_author), '</div>
+//					</div></div>';
+
+echo '<div id="sync-pull-id-#" class="sync-pull-row">
+   <div class="sync-pull-column-id">123</div>
+   <div class="sync-pull-column-title">Some title</div>
+   <div class="sync-pull-column-content">this is the content of the post on the target</div>
+   <div class="sync-pull-column-modified">Mar 1 2015</div>
+   <div class="sync-pull-column-author">George</div>
+</div>
+</div>';
+			//}
+
+			echo '<div id="sync-pull-messages"></div>';
+
+			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
+			echo ' &nbsp; <input type="radio" id="sync-pull-current" checked="checked">';
+			echo __('Pull Content into current Post', 'wpsitesync-pull');
+			echo ' &nbsp; <input type="radio" id="sync-pull-new">';
+			echo __('Pull into new Post', 'wpsitesync-pull');
+			echo ' &nbsp; <button id="sync-pull-selected" type="button" onclick="wpsitesynccontent.pull.pull(';
+			if (0 !== $target_post_id) {
+				echo esc_attr($target_post_id);
+			}
+			echo '); return false;"class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">', __('Pull Selected Content', 'wpsitesync-pull'), '</button>';
+
+			echo '</p></div>'; // close dialog HTML
+		}
 	}
 }
 

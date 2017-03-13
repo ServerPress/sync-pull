@@ -10,7 +10,7 @@
 	<p><?php _e('Moving this Content from the Target will overwrite the current contents on your local site. Are you sure you wish to continue with this operation?', 'wpsitesync-pull'); ?></p>
 	<div class="pull-actions" style="padding: 10px; clear: both; border-top: 1px solid #ddd;">
 		<button type="button" onclick="wpsitesynccontent.pull.cancel(); return false;" class="button" style="float:left;"><?php _e('Cancel', 'wpsitesync-pull'); ?></button>
-		<button id="btn-sync" onclick="wpsitesynccontent.pull.action(<?php echo $data['source_post_id']; ?>, true); return false;" type="button" class="button button-primary" style="float:right;"><?php _e('Pull Content', 'wpsitesync-pull'); ?></button>
+		<button id="btn-sync" onclick="wpsitesynccontent.pull.show_dialog(<?php echo $data['source_post_id']; ?>, true); return false;" type="button" class="button button-primary" style="float:right;"><?php _e('Pull Content', 'wpsitesync-pull'); ?></button>
 		<div class="clear"></div>
 	</div>
 	<div class="pull-loading-indicator" style="display: none;">
