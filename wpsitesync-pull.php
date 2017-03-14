@@ -153,7 +153,7 @@ SyncDebug::log(__METHOD__.'() action=' . $action);
 			if ('pullcontent' === $action) {
 SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 // TODO: probably don't need to do anything on the API request since 'post_id' and 'post_name' are already present
-###				$post_id = $input->post_int('post_id', 0);
+				//$post_id = $input->post_int('post_id', 0);
 ###				if (0 === $post_id && isset($args['source_id']))
 ###					$post_id = intval($args['source_id']);
 ###				$target_id = $input->post_int('target_id', 0);
@@ -322,6 +322,11 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 					$this->load_class('pullapirequest');
 					$response->error_code(SyncPullApiRequest::ERROR_SEARCH_NOT_FOUND);
 					return TRUE;            // return, signaling that the API request was processed
+				}
+
+				if ('' === $search) {
+					$response->set('search_results', __('0 posts found', 'wpsitesync-pull'));
+					return TRUE;
 				}
 
 				// search for results

@@ -313,7 +313,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			$target_post_id = 0;
 
 			// display dialog HTML
-			echo '<div id="sync-pull-dialog" style="display:none" title="', esc_html($title), '">';
+			echo '<div id="sync-pull-dialog" style="display:none" title="', esc_html($title), '"><div id="spectrom_sync">';
 			echo '<p>', esc_html__('Search for', 'wpsitesync-pull');
 			echo ' <input type="search" id="sync-pull-search" value=""></p>';
 
@@ -346,7 +346,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			}
 			echo '); return false;"class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">', __('Pull Selected Content', 'wpsitesync-pull'), '</button>';
 
-			echo '</p></div>'; // close dialog HTML
+			echo '</p></div></div>'; // close dialog HTML
 		}
 	}
 

@@ -58,3 +58,7 @@
 #sync-pull-search-ui {
 	display: inline-block;
 }
+
+#sync-pull-dialog #spectrom_sync {
+	border: none;
+}
