@@ -131,6 +131,42 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - api() response for "pull": ' . 
 				$resp->notice(__('Content has been modified on the Target site since the last Push. Continue?', 'wpsitesync-pull'));
 			} else
 				$resp->success(TRUE);
+		} else if ('pullsearch' === $operation) {
+			$found = TRUE;
+
+			$input = new SyncInput();
+
+			$post_type = $input->post('posttype', NULL);
+			// check for NULL == post_type and exit here
+			if (NULL === $post_type) {
+				// no post type provided. Return error message
+				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
+				$resp->error_code(SyncPullApiRequest::ERROR_POST_TYPE_NOT_FOUND);
+				$resp->success(FALSE);
+				return TRUE;        // return, signaling that we've handled the request
+			}
+
+			$search = $input->post('search', NULL);
+			// check for NULL == search and exit here
+			if (NULL === $search) {
+				// no search text provided. Return error message
+				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
+				$resp->error_code(SyncPullApiRequest::ERROR_SEARCH_NOT_FOUND);
+				$resp->success(FALSE);
+				return TRUE;        // return, signaling that we've handled the request
+			}
+
+			$args = array('posttype' => $post_type, 'search' => $search);
+			$api = new SyncApiRequest();
+			$api_response = $api->api('pullsearch', $args);
+
+			// copy contents of SyncApiResponse object from API call into the Response object for AJAX call
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' - returned from api() call; copying response');
+			$resp->copy($api_response);
+			if (0 === $api_response->get_error_code()) {
+SyncDebug::log(' - no error, setting success');
+				$resp->success(TRUE);
+			}
 		}
 
 		return $found;
@@ -289,34 +325,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 				echo $content_details;
 				echo '</div>';    // contains content detail information
 			}
-
-
-//				$post_data = get_post($source_post_id, OBJECT);
-				echo '<div id="sync-pull-search-results" style="display:none"><p>Found x posts matching search:</p>';
-				echo '<div id="sync-pull-results-header" class="sync-pull-row">
-						<div class="sync-pull-column-id">', __('ID', 'wpsitesync-pull'), '</div>
-						<div class="sync-pull-column-title">', __('Title', 'wpsitesync-pull'), '</div>
-						<div class="sync-pull-column-content">', __('Content', 'wpsitesync-pull'), '</div>
-						<div class="sync-pull-column-modified">', __('Modified', 'wpsitesync-pull'), '</div>
-						<div class="sync-pull-column-author">', __('Author', 'wpsitesync-pull'), '</div>
-					</div>';
-//				echo '<div id="sync-pull-id-#" class="sync-pull-row">
-//						<div class="sync-pull-column-id">', esc_html($post_data->ID), '</div>
-//						<div class="sync-pull-column-title">', esc_html($post_data->post_title), '</div>
-//						<div class="sync-pull-column-content">', esc_html($post_data->post_excerpt), '</div>
-//						<div class="sync-pull-column-modified">', esc_html($post_data->post_modified), '</div>
-//						<div class="sync-pull-column-author">', esc_html($post_data->post_author), '</div>
-//					</div></div>';
-
-echo '<div id="sync-pull-id-#" class="sync-pull-row">
-   <div class="sync-pull-column-id">123</div>
-   <div class="sync-pull-column-title">Some title</div>
-   <div class="sync-pull-column-content">this is the content of the post on the target</div>
-   <div class="sync-pull-column-modified">Mar 1 2015</div>
-   <div class="sync-pull-column-author">George</div>
-</div>
-</div>';
-			//}
+			echo '<div id="sync-pull-search-results" style="display:none"></div>';
 
 			echo '<div id="sync-pull-messages"></div>';
 

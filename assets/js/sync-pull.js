@@ -140,18 +140,44 @@ console.log('.pull.hide_msgs()');
 
 WPSiteSyncContent_Pull.prototype.pull = function(post_id)
 {
-	//this.ajax = true;
+	this.searching = true;
     wpsitesynccontent.pull.action(post_id);
 }
 
 WPSiteSyncContent_Pull.prototype.search = function()
 {
 	if (!this.searching) {
+        this.searching = true;
 		jQuery('#sync-pull-selected').prop('disabled', true);
-		jQuery('#sync-pull-dialog #sync-details').hide();
-		jQuery('#sync-pull-search-results')./*html('test').*/show();
+        jQuery('#sync-pull-dialog #sync-details').hide();
+        jQuery('#sync-pull-messages').hide();
+
+        var data = {
+            action: 'spectrom_sync',
+            operation: 'pullsearch',
+            posttype: typenow,
+            search: jQuery('#sync-pull-search').val(),
+            _sync_nonce: jQuery('#_sync_nonce').val()
+        };
+        jQuery.ajax({
+            type: 'post',
+            data: data,
+            url: ajaxurl,
+            success: function (response)
+            {
+console.log(response);
+                if (response.success) {
+                    jQuery('#sync-pull-search-results').html(response.data.search_results).show();
+                } else if (0 !== response.error_code) {
+                    jQuery('#sync-pull-messages').html(response.error_message).show();
+                } else {
+console.log('Failed to execute API.');
+                }
+            }
+        });
    	}
-    this.searching = true;
+
+    this.searching = false;
 }
 
 /*
@@ -175,7 +201,7 @@ jQuery(document).ready(function () {
 
     jQuery('#sync-pull-search').keyup(_.debounce(wpsitesynccontent.pull.search, 3000));
 
-    jQuery('.sync-pull-row').on('click', 'div', function(event) {
+    jQuery('#sync-pull-search-results').on('click', '.sync-pull-row', function(event) {
     	jQuery(event.target).parent().addClass('selected');
     	this.post_id = jQuery(this).parent().attr('id').substr(13);
         jQuery('#sync-pull-selected').prop('disabled', false);

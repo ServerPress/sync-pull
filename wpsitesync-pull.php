@@ -305,6 +305,80 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response data=' . var_export($r
 				$return = TRUE;						// tell the SyncApiController that the request was handled
 			}
 
+			// process pullsearch
+			if ('pullsearch' === $action) {
+				$input = new SyncInput();
+				$post_type = $input->post('posttype', NULL);
+				$search = $input->post('search', NULL);
+SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search);
+
+				// check api parameters
+				if (NULL === $post_type) {
+					$this->load_class('pullapirequest');
+					$response->error_code(SyncPullApiRequest::ERROR_POST_TYPE_NOT_FOUND);
+					return TRUE;            // return, signaling that the API request was processed
+				}
+				if (NULL === $search) {
+					$this->load_class('pullapirequest');
+					$response->error_code(SyncPullApiRequest::ERROR_SEARCH_NOT_FOUND);
+					return TRUE;            // return, signaling that the API request was processed
+				}
+
+				// search for results
+				$args = array(
+					'post_type' => array($post_type),
+					's' => $search,
+					'nopaging' => TRUE,
+					'posts_per_page' => '100',
+					'orderby' => 'none',
+					'cache_results' => FALSE,
+					'update_post_meta_cache' => FALSE,
+					'update_post_term_cache' => FALSE,
+				);
+
+				$query = new WP_Query($args);
+
+				ob_start();
+
+				if ($query->have_posts()) {
+					echo '<p>', sprintf(__('Found %d posts matching search:', 'wpsitesync-pull'), $query->post_count), '</p>';
+
+					echo '<div id="sync-pull-results-header" class="sync-pull-row">
+						<div class="sync-pull-column-id">', __('ID', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-title">', __('Title', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-content">', __('Content', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-modified">', __('Modified', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-author">', __('Author', 'wpsitesync-pull'), '</div>
+					</div>';
+
+					while ($query->have_posts()) {
+						$query->the_post();
+						?>
+						<div id="sync-pull-id-<?php the_ID(); ?>" class="sync-pull-row">
+							<div class="sync-pull-column-id"><?php the_ID(); ?></div>
+							<div class="sync-pull-column-title"><?php the_title(); ?></div>
+							<div class="sync-pull-column-content"><?php echo get_the_excerpt(); ?></div>
+							<div class="sync-pull-column-modified"><?php the_modified_date(); ?></div>
+							<div class="sync-pull-column-author"><?php the_author(); ?></div>
+						</div>
+						<?php
+					}
+				} else {
+					echo __('0 posts found', 'wpsitesync-pull');
+				}
+
+				$search_results = ob_get_clean();
+
+				wp_reset_postdata();
+
+				$response->set('search_results', $search_results);        // add all the information to the ApiResponse object
+				$response->set('site_key', SyncOptions::get('site_key'));
+
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' - response data=' . var_export($response, TRUE));
+
+				$return = TRUE; // tell the SyncApiController that the request was handled
+			}
+
 			// TODO: this still used?
 			if ('pull_process' === $action)
 				return TRUE;
@@ -406,6 +480,15 @@ SyncDebug::log(__METHOD__.'() - found ' . count($_POST['pull_media']) . ' media 
 					}
 				}
 //else SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - no response body');
+			} else if ('pullsearch' === $action) {
+SyncDebug::log(__METHOD__ . '() response from API request: ' . var_export($response, TRUE));
+				$api_response = NULL;
+				if (isset($response->response)) {
+SyncDebug::log(__METHOD__ . '() decoding response: ' . var_export($response->response, TRUE));
+					$api_response = $response->response;
+					$response->set('search_results', $response->response->data->search_results);
+				}
+SyncDebug::log(__METHOD__ . '() api response body=' . var_export($api_response, TRUE));
 			}
 		}
 
@@ -686,7 +769,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($respon
 		}
 
 		/**
-		 * Filters the errors list, addint SyncPull specific code-to-string values
+		 * Filters the errors list, adding SyncPull specific code-to-string values
 		 * @param string $message The error string message to be returned
 		 * @param int $code The error code being evaluated
 		 * @return string The modified $message string, with Pull specific errors added to it
@@ -697,12 +780,14 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($respon
 			switch ($code) {
 			case SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND:	$message = __('Matching Content cannot be found on Target site. Please Push first.', 'wpsitesync-pull'); break;
 			case SyncPullApiRequest::ERROR_POST_NOT_FOUND:			$message = __('The post cannot be found.', 'wpsitesync-pull'); break;
+			case SyncPullApiRequest::ERROR_POST_TYPE_NOT_FOUND: 	$message = __('No post type provided.', 'wpsitesync-pull'); break;
+			case SyncPullApiRequest::ERROR_SEARCH_NOT_FOUND: 		$message = __('Search is empty.', 'wpsitesync-pull'); break;
 			}
 			return $message;
 		}
 
 		/**
-		 * Filters the notices list, addint SyncPull specific code-to-string values
+		 * Filters the notices list, adding SyncPull specific code-to-string values
 		 * @param string $message The notice string message to be returned
 		 * @param int $code The notice code being evaluated
 		 * @return string The modified $message string, with Pull specific notices added to it
