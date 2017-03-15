@@ -141,6 +141,7 @@ SyncDebug::log(__METHOD__.'() action=' . $action);
 				return $args;
 
 			$input = new SyncInput();
+			$model = new SyncModel();
 
 			// TODO: nonce verification to be done in SyncApiController::__construct() so we don't have to do it here
 //			if (!wp_verify_nonce($input->get('_spectrom_sync_nonce'), $input->get('site_key'))) {
@@ -152,59 +153,39 @@ SyncDebug::log(__METHOD__.'() action=' . $action);
 
 			if ('pullcontent' === $action) {
 SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
-// TODO: probably don't need to do anything on the API request since 'post_id' and 'post_name' are already present
-				//$post_id = $input->post_int('post_id', 0);
-###				if (0 === $post_id && isset($args['source_id']))
-###					$post_id = intval($args['source_id']);
-###				$target_id = $input->post_int('target_id', 0);
-###				if (0 === $target_id && isset($args['target_id']))
-###					$target_id = intval($args['target_id']);
+				$source_post_id = $input->post_int('post_id', 0);
+				$target_post_id = $input->post_int('target_id', 0);
+				$content = $input->post('content', 'current');
 
-###				$data = array(
-###					'source_id' => $post_id,
-###					'target_id' => $target_id, // isset($args['target_id']) ? $args['target_id'] : 0
-###				);
-###SyncDebug::log(__METHOD__.'() adding pull_data to API request data: ' . var_export($data, TRUE));
+				if ('new' === $content) {
+					// add new post
+					$post_args = array('post_title' => 'title', 'post_content' => 'content');
+					$source_post_id = wp_insert_post($post_args);
 
-###				$args['pull_data'] = $data;
-//				$pull = $this->_load_class('PullApiRequest', TRUE);
-//				$pull->get_data($response);
-//////////////
-/*				// TODO: use SyncModel::is_post_locked()
-				if (!function_exists('wp_check_post_lock'))
-					require_once(ABSPATH . 'wp-admin/includes/post.php');
-				if ($last = wp_check_post_lock($post_id)) {
-					$response->success(FALSE);
-					$response->error_code(SyncApiRequest::ERROR_CONTENT_LOCKED);
-					return TRUE;
+					if (is_wp_error($source_post_id)) {
+						WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
+						$resp->error_code(SyncPullApiRequest::ERROR_CANNOT_CREATE_NEW_POST);
+						return TRUE;        // return, signaling that we've handled the request
+					}
 				}
 
-				$model = new SyncModel();
-				$sync_data = $model->build_sync_data($post_id);
+				$sync_data = $model->get_sync_target_post($source_post_id, SyncOptions::get('target_site_key'));
 
-				// TODO: check to see if content is being edited and return SyncApiRequest::ERROR_CONTENT_EDITING
-				// TODO: check to see if content is locked and return SyncApiRequest::ERROR_CONTENT_LOCKED
+				if (NULL === $sync_data) {
 
-				// also include the user name of the author
-				$user_data = get_userdata($sync_data['post_data']['post_author']);
-				// User still exists
-				if ($user_data) {
-					$sync_data['username'] = $user_data->user_login;
-					$sync_data['user_id'] = $user_data->ID;
-				} else {
-					$sync_data['username'] = NULL;
-					$sync_data['user_id'] = NULL;
+					// insert into sync table
+					$data = array(
+						'content_type' => 'post',
+						'site_key' => SyncOptions::get('target_site_key'),
+						'source_content_id' => $target_post_id,
+						'target_content_id' => $source_post_id,
+					);
+					$model->save_sync_data($data);
 				}
 
-				$response->success(TRUE);
-				$response->set('post_id', $post_id);
-				$response->set('content', $sync_data);
+				$args['post_id'] = $source_post_id;
 
-				// TODO: add data for metadata, attachments, etc. Check to make sure $model->build_sync_data() does this
-				// TODO: add comment data associated with this post. Check to make sure $model->build_sync_data() does this
-
-				$return = TRUE;			// notify Sync core that we handled the request
-*/
+SyncDebug::log(__METHOD__ . '() args=' . var_export($args, TRUE));
 			}
 
 			// return the filter value
@@ -264,6 +245,7 @@ SyncDebug::log(__METHOD__.'() post data: ' . var_export($_POST, TRUE));
 ##					$source_post_id = intval($req_info['source_id']);
 				$source_post_id = $input->post_int('post_id', 0);
 				$target_post_id = $input->post_int('target_id', 0);
+				$content = $input->post('content', 'current');
 
 SyncDebug::log(__METHOD__.'() source id=' . $source_post_id . ' target id=' . $target_post_id);
 
@@ -271,7 +253,7 @@ SyncDebug::log(__METHOD__.'() source id=' . $source_post_id . ' target id=' . $t
 				// TODO: if no post id, look up by name
 
 				// check api parameters
-				if (0 === $source_post_id) {
+				if (0 === $source_post_id && 'current' === $content) {
 					$this->load_class('pullapirequest');
 					$response->error_code(SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND);
 					return TRUE;			// return, signaling that the API request was processed
@@ -787,6 +769,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($respon
 			case SyncPullApiRequest::ERROR_POST_NOT_FOUND:			$message = __('The post cannot be found.', 'wpsitesync-pull'); break;
 			case SyncPullApiRequest::ERROR_POST_TYPE_NOT_FOUND: 	$message = __('No post type provided.', 'wpsitesync-pull'); break;
 			case SyncPullApiRequest::ERROR_SEARCH_NOT_FOUND: 		$message = __('Search is empty.', 'wpsitesync-pull'); break;
+			case SyncPullApiRequest::ERROR_CANNOT_CREATE_NEW_POST: 	$message = __('Unable to create new post.', 'wpsitesync-pull'); break;
 			}
 			return $message;
 		}

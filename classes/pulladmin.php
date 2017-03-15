@@ -73,8 +73,11 @@ SyncDebug::log(' - post=' . var_export($_POST, TRUE));
 			$model = new SyncModel();
 
 			$source_post_id = $input->post_int('post_id', 0);
+			$target_post_id = $input->post_int('target_id', 0);
+			$content = $input->post('content', 'current');
+
 			// check for 0 == post_id and exit here
-			if (0 === $source_post_id) {
+			if (0 === $source_post_id && 'current' === $content) {
 				// no post id provided. Return error message
 				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
 				$resp->error_code(SyncPullApiRequest::ERROR_POST_NOT_FOUND);
@@ -82,20 +85,26 @@ SyncDebug::log(' - post=' . var_export($_POST, TRUE));
 				return TRUE;		// return, signaling that we've handled the request
 			}
 
-			$sync_data = $model->get_sync_target_post($source_post_id, SyncOptions::get('target_site_key'));
-			if (NULL === $sync_data) {
-				// could not find Target post ID. Return error message
+			if (0 === $target_post_id) {
 				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
 				$resp->error_code(SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND);
 				return TRUE;		// return, signaling that we've handled the request
 			}
 
+//			$sync_data = $model->get_sync_target_post($source_post_id, SyncOptions::get('target_site_key'));
+//
+//			if (NULL === $sync_data) {
+//				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
+//				$resp->error_code(SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND);
+//				return TRUE;        // return, signaling that we've handled the request
+//			}
+
 			// perform the Sync Pull operation
-SyncDebug::log(__METHOD__.'() sync_data=' . var_export($sync_data, TRUE));
-			$source_post_id = abs($sync_data->source_content_id);
-			$target_post_id = abs($sync_data->target_content_id);
-SyncDebug::log(' - source=' . $sync_data->source_content_id . ' target=' . $sync_data->target_content_id);
-SyncDebug::log(' - args source=' . $source_post_id . ' target=' . $target_post_id);
+//SyncDebug::log(__METHOD__.'() sync_data=' . var_export($sync_data, TRUE));
+//			$source_post_id = abs($sync_data->source_content_id);
+//			$target_post_id = abs($sync_data->target_content_id);
+//SyncDebug::log(' - source=' . $sync_data->source_content_id . ' target=' . $sync_data->target_content_id);
+//SyncDebug::log(' - args source=' . $source_post_id . ' target=' . $target_post_id);
 			$args = array('post_id' => $source_post_id, 'target_id' => $target_post_id);
 			$api = new SyncApiRequest();
 			$api_response = $api->api('pullcontent', $args);
@@ -331,10 +340,10 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 
 			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
 			if ('post' === $screen->base) {
-				echo ' &nbsp; <input type="radio" id="sync-pull-current" checked="checked">';
+				echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked">';
 				echo __('Pull Content into current Post', 'wpsitesync-pull');
 			}
-			echo ' &nbsp; <input type="radio" id="sync-pull-new"';
+			echo ' &nbsp; <input type="radio" id="sync-pull-new" name="sync-pull-where" value="new"';
 			if ('edit' === $screen->base) {
 				echo ' checked="checked"';
 			}
