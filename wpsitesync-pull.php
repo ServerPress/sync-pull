@@ -66,15 +66,12 @@ if (!class_exists('WPSiteSync_Pull')) {
 
 			if (is_admin()) {
 				$this->load_class('pulladmin');
-//				require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . 'pulladmin.php');
 				SyncPullAdmin::get_instance();
 			}
 
 			add_filter('spectrom_sync_api_request_action', array($this, 'api_request'), 20, 3);		// called by SyncApiRequest
 			add_filter('spectrom_sync_api', array($this, 'api_controller_request'), 10, 3);			// called by SyncApiController
 			add_action('spectrom_sync_api_request_response', array($this, 'api_response'), 10, 3);		// called by SyncApiRequest->api()
-//			add_action('spectrom_sync_action_success', array($this, 'api_success'), 10, 4);			// called after api('pullcontent') is successfully processed in SyncApiRequest
-//			add_action('spectrom_sync_api_process', array($this, 'api_process'), 10, 3);				// called by SyncApiController::_construct() after processing
 
 			add_filter('spectrom_sync_error_code_to_text', array($this, 'filter_error_codes'), 10, 2);
 			add_filter('spectrom_sync_notice_code_to_text', array($this, 'filter_notice_codes'), 10, 2);
@@ -158,6 +155,14 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 				$content = $input->post('content', 'current');
 
 				if ('new' === $content) {
+
+					// remove old sync data
+					if (0 !== $source_post_id) {
+						$model->remove_sync_data($source_post_id);
+						$meta_key = '_spectrom_sync_details_' . sanitize_key(SyncOptions::get('target'));
+						delete_post_meta($source_post_id, $meta_key);
+					}
+
 					// add new post
 					$post_args = array('post_title' => 'title', 'post_content' => 'content');
 					$source_post_id = wp_insert_post($post_args);
@@ -171,14 +176,22 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 
 				$sync_data = $model->get_sync_target_post($source_post_id, SyncOptions::get('target_site_key'));
 
+				if ($target_post_id !== $sync_data->target_post_id) {
+					$model->remove_sync_data($source_post_id);
+					$meta_key = '_spectrom_sync_details_' . sanitize_key(SyncOptions::get('target'));
+					delete_post_meta($source_post_id, $meta_key);
+					$sync_data = NULL;
+				}
+
 				if (NULL === $sync_data) {
 
 					// insert into sync table
 					$data = array(
 						'content_type' => 'post',
-						'site_key' => SyncOptions::get('target_site_key'),
-						'source_content_id' => $target_post_id,
-						'target_content_id' => $source_post_id,
+						'site_key' => SyncOptions::get('site_key'),
+						'target_site_key' => SyncOptions::get('target_site_key'),
+						'target_content_id' => $target_post_id,
+						'source_content_id' => $source_post_id,
 					);
 					$model->save_sync_data($data);
 				}
@@ -239,10 +252,6 @@ SyncDebug::log(__METHOD__."() handling '{$action}' action");
 SyncDebug::log(__METHOD__.'() post data: ' . var_export($_POST, TRUE));
 				$input = new SyncInput();
 
-##				$req_info = $input->post_raw('pull_data', NULL);
-
-##				if (isset($req_info['source_id']))
-##					$source_post_id = intval($req_info['source_id']);
 				$source_post_id = $input->post_int('post_id', 0);
 				$target_post_id = $input->post_int('target_id', 0);
 				$content = $input->post('content', 'current');
@@ -274,6 +283,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - build_sync_data() returned ' . 
 				}
 //				$response->set('post_data', $data['post_data']);		// add all the post information to the ApiResponse object
 				$response->set('site_key', SyncOptions::get('site_key'));
+				$response->set('post_id', $source_post_id);
 
 				// if post_author provided, also give their name
 				if (isset($data['post_data']['post_author'])) {
@@ -419,9 +429,6 @@ SyncDebug::log(__METHOD__.'() api response body=' . var_export($api_response, TR
 				if (NULL !== $api_response) {
 					$save_post = $_POST;
 
-					// convert the pull data into an array
-###					$pull_data = json_decode(json_encode($api_response->data->post_data), TRUE); // $response->response->data->pull_data;
-###SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - pull data=' . var_export($pull_data, TRUE));
 					$site_key = $api_response->data->site_key; // $pull_data->site_key;
 SyncDebug::log(__METHOD__.'() target\'s site key: ' . $site_key);
 					$target_url = SyncOptions::get('target');
@@ -462,8 +469,9 @@ SyncDebug::log(__METHOD__.'() - found ' . count($_POST['pull_media']) . ' media 
 
 					$_POST = $save_post;
 					if (0 === $response->get_error_code()) {
+						$edit_url = admin_url('post.php?post=' . $api_response->data->post_id . '&action=edit');
+						$response->set('edit_url', $edit_url);
 						$response->success(TRUE);
-					} else {
 					}
 				}
 //else SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - no response body');

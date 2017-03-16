@@ -15,7 +15,7 @@ class SyncPullAdmin
 
 		add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
 		add_action('spectrom_sync_metabox_after_button', array($this, 'add_pull_to_metabox'), 10, 1);
-		add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
+		//add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
 		add_action('admin_footer', array($this, 'add_dialog_modal'));
 		add_action('admin_print_scripts-edit.php', array($this, 'print_hidden_div'));
 	}
@@ -298,8 +298,14 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 	}
 	public function add_pull_ui_messages()
 	{
-		echo '<span id="sync-msg-pull-working">', __('Pulling Content from Target...', 'wpsitesync-pull'), '</span>';
-		echo '<span id="sync-msg-pull-complete">', __('Pull Complete. Reloading Page...', 'wpsitesync-pull'), '</span>';
+		echo '<div id="sync-message-container" style="display:none">
+			<span id="sync-content-anim" style="display:none">
+			<img src="', WPSiteSyncContent::get_asset('imgs/ajax-loader.gif'), '">
+			</span><span id="sync-message"></span>';
+		echo '<span id="sync-msg-pull-working" style="display:none">', __('Pulling Content from Target...', 'wpsitesync-pull'), '</span>';
+		echo '<span id="sync-msg-pull-complete" style="display:none">', __('Pull Complete. Reloading Page...', 'wpsitesync-pull'), '</span>';
+		echo '<span id="sync-msg-pull-searching" style="display:none">', __('Searching for Content...', 'wpsitesync-pull'), '</span>';
+		echo '</div>';
 	}
 
 	/**
@@ -315,7 +321,6 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 		if (is_object($screen) && ('post' === $screen->base || 'edit' === $screen->base)) {
 			global $post;
 
-			// @todo move into view?
 			$post_type = get_post_type_object(get_post_type());
 			$title = sprintf(__('Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type->labels->singular_name, SyncOptions::get('host'));
 			$sync_model = new SyncModel();
@@ -329,14 +334,14 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
 				// display associated content if it exists
 				$target_post_id = $sync_data->target_content_id;
-				$content_details = SyncAdmin::get_instance()->_get_content_details();
+				$content_details = SyncAdmin::get_instance()->get_content_details();
 				echo '<div id="sync-details">';
 				echo $content_details;
 				echo '</div>';    // contains content detail information
 			}
 			echo '<div id="sync-pull-search-results" style="display:none"></div>';
 
-			echo '<div id="sync-pull-messages"></div>';
+			echo $this->add_pull_ui_messages();
 
 			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
 			if ('post' === $screen->base) {

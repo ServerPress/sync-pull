@@ -16,6 +16,7 @@ function WPSiteSyncContent_Pull()
 
 /**
  * Add Dialog Modal
+ * @param {int} post_id The post id
  */
 WPSiteSyncContent_Pull.prototype.show_dialog = function(post_id)
 {
@@ -24,6 +25,10 @@ console.log('.pull.show_dialog()');
     if ('undefined' !== typeof(post_id))
     	this.post_id = post_id;
 
+    var message_container = jQuery('#sync-contents #sync-message-container').prop('outerHTML');
+
+    jQuery('#sync-contents #sync-message-container').replaceWith('<div id="sync-temp"></div>');
+
     jQuery('#sync-pull-dialog').dialog({
         resizable: true,
         height: 'auto',
@@ -31,10 +36,10 @@ console.log('.pull.show_dialog()');
         modal: true,
         dialogClass: 'wp-dialog',
         closeOnEscape: true,
+        close: function (event, ui) {
+        	jQuery('#sync-temp').replaceWith(message_container);
+        }
     });
-
-    // @todo move it back when modal closes, space missing between buttons in metabox
-    jQuery('#sync-message-container').appendTo('#sync-pull-messages');
 };
 
 /**
@@ -52,6 +57,7 @@ console.log('.pull.show()');
  * Pull content from a target site
  * @param  {int} post_id The post ID from the current site
  * @param  {int} confirmation Whether the request is confirmed or not
+ * @todo no longer used?
  */
 WPSiteSyncContent_Pull.prototype.action = function(post_id, confirmation)
 {
@@ -150,18 +156,18 @@ console.log('.pull.hide_msgs()');
 
 /**
  * Call the Pull API
- * @param {int} post_id The Source post id
+ * @param {int} target_post_id The Target post id
  */
-WPSiteSyncContent_Pull.prototype.pull = function(post_id)
+WPSiteSyncContent_Pull.prototype.pull = function(target_post_id)
 {
 	var values = {};
 
     // check for post_id
-    if (0 === this.post_id && ! post_id)
+    if (0 === this.post_id && ! target_post_id)
         return;
 
-    if (post_id) {
-    	this.target_post_id = post_id;
+    if (!this.target_post_id && target_post_id) {
+    	this.target_post_id = target_post_id;
 	}
 
     jQuery('.pull-actions').hide();
@@ -185,9 +191,11 @@ WPSiteSyncContent_Pull.prototype.search = function()
 {
 	if (!this.searching) {
         this.searching = true;
+        wpsitesynccontent.inited = true;
 		jQuery('#sync-pull-selected').prop('disabled', true);
         jQuery('#sync-pull-dialog #sync-details').hide();
-        jQuery('#sync-pull-messages').html();
+
+		wpsitesynccontent.set_message(jQuery('#sync-msg-pull-searching').text(), true);
 
         var data = {
             action: 'spectrom_sync',
@@ -203,10 +211,11 @@ WPSiteSyncContent_Pull.prototype.search = function()
             success: function (response)
             {
 console.log(response);
+                wpsitesynccontent.clear_message();
                 if (response.success) {
                     jQuery('#sync-pull-search-results').html(response.data.search_results).show();
                 } else if (0 !== response.error_code) {
-                    jQuery('#sync-pull-messages').html(response.error_message).show();
+                    wpsitesynccontent.set_message(response.error_message, false);
                 } else {
 console.log('Failed to execute API.');
                 }
@@ -240,9 +249,8 @@ jQuery(document).ready(function () {
         wpsitesynccontent.push_xhr.success = function(response)
 		{
             if (response.success) {
-                // reload page to show new content
                 wpsitesynccontent.set_message(jQuery('#sync-msg-pull-complete').text());
-                //window.location.reload();
+                window.location.assign(response.data.edit_url);
             } else if (0 !== response.error_code) {
                 wpsitesynccontent.set_message(response.error_message, false, true);
             } else {
