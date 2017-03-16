@@ -331,7 +331,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			echo '<p>', esc_html__('Search for', 'wpsitesync-pull');
 			echo ' <input type="search" id="sync-pull-search" value=""></p>';
 
-			if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
+			if ('post' === $screen->base && NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
 				// display associated content if it exists
 				$target_post_id = $sync_data->target_content_id;
 				$content_details = SyncAdmin::get_instance()->get_content_details();

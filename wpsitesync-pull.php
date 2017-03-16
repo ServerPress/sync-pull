@@ -159,6 +159,7 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 					// remove old sync data
 					if (0 !== $source_post_id) {
 						$model->remove_sync_data($source_post_id);
+						$model->remove_sync_data($target_post_id);
 						$meta_key = '_spectrom_sync_details_' . sanitize_key(SyncOptions::get('target'));
 						delete_post_meta($source_post_id, $meta_key);
 					}
@@ -178,6 +179,7 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 
 				if ($target_post_id !== $sync_data->target_post_id) {
 					$model->remove_sync_data($source_post_id);
+					$model->remove_sync_data($target_post_id);
 					$meta_key = '_spectrom_sync_details_' . sanitize_key(SyncOptions::get('target'));
 					delete_post_meta($source_post_id, $meta_key);
 					$sync_data = NULL;
@@ -190,8 +192,17 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 						'content_type' => 'post',
 						'site_key' => SyncOptions::get('site_key'),
 						'target_site_key' => SyncOptions::get('target_site_key'),
-						'target_content_id' => $target_post_id,
 						'source_content_id' => $source_post_id,
+						'target_content_id' => $target_post_id,
+					);
+					$model->save_sync_data($data);
+
+					$data = array(
+						'content_type' => 'post',
+						'site_key' => SyncOptions::get('target_site_key'),
+						'target_site_key' => SyncOptions::get('site_key'),
+						'source_content_id' => $target_post_id,
+						'target_content_id' => $source_post_id,
 					);
 					$model->save_sync_data($data);
 				}
@@ -440,7 +451,7 @@ SyncDebug::log(__METHOD__.'() target\'s site key: ' . $site_key);
 
 					// after copying from API results, reset some of the data to simulate the API call correctly
 					$_POST['post_id'] = abs($api_response->data->post_data->ID);
-					$_POST['target_post_id'] = abs($_REQUEST['post_id']);	// used by SyncApiController->push() to identify target post
+					$_POST['target_post_id'] = abs($api_response->data->post_id);	// used by SyncApiController->push() to identify target post
 ###					$_POST['post_data'] = $pull_data;
 					$_POST['action'] = 'push';
 					// TODO: set up headers
