@@ -155,7 +155,6 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 				$content = $input->post('content', 'current');
 
 				if ('new' === $content) {
-
 					// remove old sync data
 					if (0 !== $source_post_id) {
 						$model->remove_sync_data($source_post_id);
@@ -186,7 +185,6 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 				}
 
 				if (NULL === $sync_data) {
-
 					// insert into sync table
 					$data = array(
 						'content_type' => 'post',
@@ -710,7 +708,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' returning "' . $name . '"');
 		{
 			if (NULL !== $this->_push_controller && 'push' === $this->_push_controller->parent_action) {
 				// add image information into the data array of the Push rather than handling as separate 'upload_media' API requests
-
+				// TODO: implement
 			}
 		}
 

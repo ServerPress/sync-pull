@@ -22,24 +22,24 @@ WPSiteSyncContent_Pull.prototype.show_dialog = function(post_id)
 {
 console.log('.pull.show_dialog()');
 
-    if ('undefined' !== typeof(post_id))
-    	this.post_id = post_id;
+	if ('undefined' !== typeof(post_id))
+		this.post_id = post_id;
 
-    var message_container = jQuery('#sync-contents #sync-message-container').prop('outerHTML');
+	var message_container = jQuery('#sync-contents #sync-message-container').prop('outerHTML');
 
-    jQuery('#sync-contents #sync-message-container').replaceWith('<div id="sync-temp"></div>');
+	jQuery('#sync-contents #sync-message-container').replaceWith('<div id="sync-temp"></div>');
 
-    jQuery('#sync-pull-dialog').dialog({
-        resizable: true,
-        height: 'auto',
-        width: 700,
-        modal: true,
-        dialogClass: 'wp-dialog',
-        closeOnEscape: true,
-        close: function (event, ui) {
-        	jQuery('#sync-temp').replaceWith(message_container);
-        }
-    });
+	jQuery('#sync-pull-dialog').dialog({
+		resizable: true,
+		height: 'auto',
+		width: 700,
+		modal: true,
+		dialogClass: 'wp-dialog',
+		closeOnEscape: true,
+		close: function (event, ui) {
+			jQuery('#sync-temp').replaceWith(message_container);
+		}
+	});
 };
 
 /**
@@ -55,8 +55,8 @@ console.log('.pull.show()');
 
 /**
  * Pull content from a target site
- * @param  {int} post_id The post ID from the current site
- * @param  {int} confirmation Whether the request is confirmed or not
+ * @param {int} post_id The post ID from the current site
+ * @param {int} confirmation Whether the request is confirmed or not
  * @todo no longer used?
  */
 WPSiteSyncContent_Pull.prototype.action = function(post_id, confirmation)
@@ -90,7 +90,7 @@ console.log(response);
 				window.location.reload();
 			} else if (0 !== response.error_code) {
 				// TODO: write to error message part of DOM
-				wpsitesynccontent.set_message(response.error_message, false, true);
+				wpsitesynccontent.set_message(response.error_message, false, true, 'sync-error');
 			} else {
 				// TODO: use a dialog box not an alert
 console.log('Failed to execute API.');
@@ -162,27 +162,27 @@ WPSiteSyncContent_Pull.prototype.pull = function(target_post_id)
 {
 	var values = {};
 
-    // check for post_id
-    if (0 === this.post_id && ! target_post_id)
-        return;
+	// check for post_id
+	if (0 === this.post_id && ! target_post_id)
+		return;
 
-    if (!this.target_post_id && target_post_id) {
-    	this.target_post_id = target_post_id;
+	if (!this.target_post_id && target_post_id) {
+		this.target_post_id = target_post_id;
 	}
 
-    jQuery('.pull-actions').hide();
-    jQuery('.pull-loading-indicator').show();
-    wpsitesynccontent.set_message(jQuery('#sync-msg-pull-working').text(), true);
+	jQuery('.pull-actions').hide();
+	jQuery('.pull-loading-indicator').show();
+	wpsitesynccontent.set_message(jQuery('#sync-msg-pull-working').text(), true);
 
-    values.content = jQuery('input[name="sync-pull-where"]:checked').val();
+	values.content = jQuery('input[name="sync-pull-where"]:checked').val();
 
-    if (this.target_post_id) {
-    	values.target_id = this.target_post_id;
+	if (this.target_post_id) {
+		values.target_id = this.target_post_id;
 	}
 
-    wpsitesynccontent.inited = true;
-    wpsitesynccontent.api('pull', this.post_id, jQuery('#sync-msg-pull-working').text(), jQuery('#sync-msg-pull-complete').text(), values);
-}
+	wpsitesynccontent.inited = true;
+	wpsitesynccontent.api('pull', this.post_id, jQuery('#sync-msg-pull-working').text(), jQuery('#sync-msg-pull-complete').text(), values);
+};
 
 /**
  * Calls the pullsearch API
@@ -190,41 +190,41 @@ WPSiteSyncContent_Pull.prototype.pull = function(target_post_id)
 WPSiteSyncContent_Pull.prototype.search = function()
 {
 	if (!this.searching) {
-        this.searching = true;
-        wpsitesynccontent.inited = true;
+		this.searching = true;
+		wpsitesynccontent.inited = true;
 		jQuery('#sync-pull-selected').prop('disabled', true);
-        jQuery('#sync-pull-dialog #sync-details').hide();
+		jQuery('#sync-pull-dialog #sync-details').hide();
 
 		wpsitesynccontent.set_message(jQuery('#sync-msg-pull-searching').text(), true);
 
-        var data = {
-            action: 'spectrom_sync',
-            operation: 'pullsearch',
-            posttype: typenow,
-            search: jQuery('#sync-pull-search').val(),
-            _sync_nonce: jQuery('#_sync_nonce').val()
-        };
-        jQuery.ajax({
-            type: 'post',
-            data: data,
-            url: ajaxurl,
-            success: function (response)
-            {
+		var data = {
+			action: 'spectrom_sync',
+			operation: 'pullsearch',
+			posttype: typenow,
+			search: jQuery('#sync-pull-search').val(),
+			_sync_nonce: jQuery('#_sync_nonce').val()
+		};
+		jQuery.ajax({
+			type: 'post',
+			data: data,
+			url: ajaxurl,
+			success: function (response)
+			{
 console.log(response);
-                wpsitesynccontent.clear_message();
-                if (response.success) {
-                    jQuery('#sync-pull-search-results').html(response.data.search_results).show();
-                } else if (0 !== response.error_code) {
-                    wpsitesynccontent.set_message(response.error_message, false);
-                } else {
+				wpsitesynccontent.clear_message();
+				if (response.success) {
+					jQuery('#sync-pull-search-results').html(response.data.search_results).show();
+				} else if (0 !== response.error_code) {
+					wpsitesynccontent.set_message(response.error_message, false, false, 'sync-error');
+				} else {
 console.log('Failed to execute API.');
-                }
-            }
-        });
-   	}
+				}
+			}
+		});
+	}
 
-    this.searching = false;
-}
+	this.searching = false;
+};
 
 /*
 jQuery(document).ready(function() {
@@ -238,39 +238,39 @@ console.log('sync-pull: checking content');
 wpsitesynccontent.pull = new WPSiteSyncContent_Pull();
 
 jQuery(document).ready(function () {
+	jQuery(document).on('sync_api_call', function (e, push_xhr)
+	{
+//		wpsitesynccontent.push_xhr.beforeSend = function (xhr, opts)
+//		{
+//			wpsitesynccontent.pull.check_modified_timestamp(xhr, opts);
+//		};
 
-    jQuery(document).on('sync_api_call', function (e, push_xhr)
-    {
-        // wpsitesynccontent.push_xhr.beforeSend = function (xhr, opts)
-        // {
-        //     wpsitesynccontent.pull.check_modified_timestamp(xhr, opts);
-        // };
-
-        wpsitesynccontent.push_xhr.success = function(response)
+		wpsitesynccontent.push_xhr.success = function(response)
 		{
-            if (response.success) {
-                wpsitesynccontent.set_message(jQuery('#sync-msg-pull-complete').text());
-                window.location.assign(response.data.edit_url);
-            } else if (0 !== response.error_code) {
-                wpsitesynccontent.set_message(response.error_message, false, true);
-            } else {
+			if (response.success) {
+				wpsitesynccontent.set_message(jQuery('#sync-msg-pull-complete').text());
+				window.location.assign(response.data.edit_url);
+			} else if (0 !== response.error_code) {
+				wpsitesynccontent.set_message(response.error_message, false, true);
+			} else {
 console.log('Failed to execute API.');
-            }
-		}
-    });
-
-    jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
-
-	jQuery('#sync-pull-cancel').on('click', function() {
-        jQuery('#sync-pull-dialog').dialog('close');
+			}
+		};
 	});
 
-    jQuery('#sync-pull-search').keyup(_.debounce(wpsitesynccontent.pull.search, 3000));
+	jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
 
-    jQuery('#sync-pull-search-results').on('click', '.sync-pull-row', function() {
-    	jQuery(this).addClass('selected');
-    	wpsitesynccontent.pull.target_post_id = jQuery(this).attr('id').substr(13);
-        jQuery('#sync-pull-selected').prop('disabled', false);
+	jQuery('#sync-pull-cancel').on('click', function() {
+		jQuery('#sync-pull-dialog').dialog('close');
+	});
+
+	jQuery('#sync-pull-search').keyup(_.debounce(wpsitesynccontent.pull.search, 3000));
+
+	jQuery('#sync-pull-search-results').on('click', '.sync-pull-row', function() {
+		jQuery(this).addClass('selected');
+		wpsitesynccontent.pull.target_post_id = jQuery(this).attr('id').substr(13);
+		jQuery('#sync-pull-selected').prop('disabled', false);
 	});
 });
 
+// EOF

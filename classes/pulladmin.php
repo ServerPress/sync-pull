@@ -47,9 +47,9 @@ class SyncPullAdmin
 
 	/**
 	 * Checks if the current ajax operation is for this plugin
-	 * @param  boolean          $found     Return TRUE or FALSE if the operation is found
-	 * @param  string           $operation The type of operation requested
-	 * @param  SyncApiResponse $response  The response to be sent
+	 * @param boolean $found Return TRUE or FALSE if the operation is found
+	 * @param string $operation The type of operation requested
+	 * @param SyncApiResponse $response The response to be sent
 	 * @return boolean Return TRUE if the current ajax operation is for this plugin, otherwise return $found
 	 */
 	// TODO: move the real work of this method to SyncPullAjaxRequest::pull_content()
@@ -96,7 +96,7 @@ SyncDebug::log(' - post=' . var_export($_POST, TRUE));
 //			if (NULL === $sync_data) {
 //				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
 //				$resp->error_code(SyncPullApiRequest::ERROR_TARGET_POST_NOT_FOUND);
-//				return TRUE;        // return, signaling that we've handled the request
+//				return TRUE;		// return, signaling that we've handled the request
 //			}
 
 			// perform the Sync Pull operation
@@ -152,7 +152,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - api() response for "pull": ' . 
 				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
 				$resp->error_code(SyncPullApiRequest::ERROR_POST_TYPE_NOT_FOUND);
 				$resp->success(FALSE);
-				return TRUE;        // return, signaling that we've handled the request
+				return TRUE;		// return, signaling that we've handled the request
 			}
 
 			$search = $input->post('search', NULL);
@@ -162,7 +162,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - api() response for "pull": ' . 
 				WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
 				$resp->error_code(SyncPullApiRequest::ERROR_SEARCH_NOT_FOUND);
 				$resp->success(FALSE);
-				return TRUE;        // return, signaling that we've handled the request
+				return TRUE;		// return, signaling that we've handled the request
 			}
 
 			$args = array('posttype' => $post_type, 'search' => $search);
@@ -337,7 +337,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 				$content_details = SyncAdmin::get_instance()->get_content_details();
 				echo '<div id="sync-details">';
 				echo $content_details;
-				echo '</div>';    // contains content detail information
+				echo '</div>';		// contains content detail information
 			}
 			echo '<div id="sync-pull-search-results" style="display:none"></div>';
 
@@ -358,7 +358,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			if (0 !== $target_post_id) {
 				echo esc_attr($target_post_id);
 			}
-			echo '); return false;"class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">', __('Pull Selected Content', 'wpsitesync-pull'), '</button>';
+			echo '); return false;" class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">', __('Pull Selected Content', 'wpsitesync-pull'), '</button>';
 
 			echo '</p></div></div>'; // close dialog HTML
 		}
@@ -372,14 +372,14 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 	 */
 	public function print_hidden_div()
 	{
-		?>
+?>
 		<div id="sync-pull-search-ui" style="display:none">
 			<button class="sync-pull button sync-button button-primary" onclick="wpsitesynccontent.pull.show_dialog()"
-			 type="button" title="<?php esc_html_e('Search to Pull Content from the Target site', 'wpsitesync-pull'); ?>">
+			 type="button" title="<?php esc_attr_e('Search to Pull Content from the Target site', 'wpsitesync-pull'); ?>">
 			<?php esc_html_e('Search for Pull', 'wpsitesync-pull'); ?>
 			</button>
 		</div>
-		<?php
+<?php
 	}
 }
 
