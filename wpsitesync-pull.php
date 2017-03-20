@@ -229,6 +229,7 @@ SyncDebug::log(__METHOD__."() handling '{$action}' action");
 
 			// handle 'pullinfo' requests
 			if ('pullinfo' === $action) {
+				// TODO: move this implementation into SyncPullApiRequest class to reduce size of WPSiteSync_Pull class
 				$input = new SyncInput();
 				$source_post_id = $input->post_int('post_id', 0);
 
@@ -258,6 +259,7 @@ SyncDebug::log(__METHOD__."() handling '{$action}' action");
 			}
 
 			if ('pullcontent' === $action) {
+				// TODO: move this implementation into SyncPullApiRequest class to reduce size of WPSiteSync_Pull class
 SyncDebug::log(__METHOD__.'() post data: ' . var_export($_POST, TRUE));
 				$input = new SyncInput();
 
@@ -308,6 +310,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response data=' . var_export($r
 
 			// process pullsearch
 			if ('pullsearch' === $action) {
+				// TODO: move this implementation into SyncPullApiRequest class to reduce size of WPSiteSync_Pull class
 				$input = new SyncInput();
 				$post_type = $input->post('posttype', NULL);
 				$search = $input->post('search', NULL);
@@ -347,7 +350,7 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 				ob_start();
 
 				if ($query->have_posts()) {
-					echo '<p>', sprintf(__('Found %d posts matching search:', 'wpsitesync-pull'), $query->post_count), '</p>';
+					echo '<p>', sprintf(__('Found %d posts matching search. Click on an item below to select it, then you can Pull.', 'wpsitesync-pull'), $query->post_count), '</p>';
 
 					echo '<div id="sync-pull-results-header" class="sync-pull-row">
 						<div class="sync-pull-column-id">', __('ID', 'wpsitesync-pull'), '</div>
@@ -370,7 +373,7 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 						<?php
 					}
 				} else {
-					echo __('0 posts found', 'wpsitesync-pull');
+					echo __('No posts found that match your search. Try searching for something else.', 'wpsitesync-pull');
 				}
 
 				$search_results = ob_get_clean();

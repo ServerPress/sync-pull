@@ -251,7 +251,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			echo '<button id="sync-pull-content" type="button" class="button button-primary sync-button btn-sync" onclick="wpsitesynccontent.pull.show_dialog(', $post->ID, ')" ';
 			if ($error)
 				echo ' disabled';
-			echo ' title="', __('Pull this Content from the Target site', 'wpsitesync-pull'), '" ';
+			echo ' title="', esc_attr__('Pull this Content from the Target site', 'wpsitesync-pull'), '" ';
 			echo '>';
 			echo '<span><span class="sync-button-icon sync-button-icon-rotate dashicons dashicons-migrate"></span>', __('Pull from Target', 'wpsitesync-pull'), '</span>';
 			echo '</button>';
@@ -318,6 +318,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 		$screen = get_current_screen();
 
 		// if on the post.php screen
+		// TODO: check to see if post type is allowed
 		if (is_object($screen) && ('post' === $screen->base || 'edit' === $screen->base)) {
 			global $post;
 
@@ -331,12 +332,20 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			echo '<p>', esc_html__('Search for', 'wpsitesync-pull');
 			echo ' <input type="search" id="sync-pull-search" value=""></p>';
 
-			if ('post' === $screen->base && NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
-				// display associated content if it exists
-				$target_post_id = $sync_data->target_content_id;
-				$content_details = SyncAdmin::get_instance()->get_content_details();
+			if ('post' === $screen->base) {
 				echo '<div id="sync-details">';
-				echo $content_details;
+				if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
+					// display associated content if it exists
+					$target_post_id = $sync_data->target_content_id;
+					$content_details = SyncAdmin::get_instance()->get_content_details();
+					echo $content_details;
+				} else {
+					echo '<p>',
+						__('There is no post on the Target site that is currently associated with this post.', 'wpsitesync-pull'), '<br/>',
+						__('Search for something by entering a search phrase above, then select Content from the search results.', 'wpsitesync-pull'), '<br/>',
+						__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a a new post.', 'wpsitesync-pull'),
+						'</p>';
+				}
 				echo '</div>';		// contains content detail information
 			}
 			echo '<div id="sync-pull-search-results" style="display:none"></div>';
@@ -357,8 +366,11 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			echo ' &nbsp; <button id="sync-pull-selected" type="button" onclick="wpsitesynccontent.pull.pull(';
 			if (0 !== $target_post_id) {
 				echo esc_attr($target_post_id);
-			}
-			echo '); return false;" class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">', __('Pull Selected Content', 'wpsitesync-pull'), '</button>';
+			} else
+				echo '0';
+			echo '); return false;" class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">',
+				'<span class="sync-button-icon sync-button-icon-rotate dashicons dashicons-migrate"></span>', __('Pull Selected Content', 'wpsitesync-pull'),
+				'</button>';
 
 			echo '</p></div></div>'; // close dialog HTML
 		}

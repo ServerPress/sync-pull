@@ -160,8 +160,6 @@ console.log('.pull.hide_msgs()');
  */
 WPSiteSyncContent_Pull.prototype.pull = function(target_post_id)
 {
-	var values = {};
-
 	// check for post_id
 	if (0 === this.post_id && ! target_post_id)
 		return;
@@ -174,6 +172,7 @@ WPSiteSyncContent_Pull.prototype.pull = function(target_post_id)
 	jQuery('.pull-loading-indicator').show();
 	wpsitesynccontent.set_message(jQuery('#sync-msg-pull-working').text(), true);
 
+	var values = {};
 	values.content = jQuery('input[name="sync-pull-where"]:checked').val();
 
 	if (this.target_post_id) {
@@ -204,6 +203,7 @@ WPSiteSyncContent_Pull.prototype.search = function()
 			search: jQuery('#sync-pull-search').val(),
 			_sync_nonce: jQuery('#_sync_nonce').val()
 		};
+		// TODO: convert to use wpsitesynccontent.api()
 		jQuery.ajax({
 			type: 'post',
 			data: data,
@@ -220,6 +220,7 @@ console.log(response);
 console.log('Failed to execute API.');
 				}
 			}
+			// TODO: implment callback for failure; display a message
 		});
 	}
 
@@ -238,6 +239,7 @@ console.log('sync-pull: checking content');
 wpsitesynccontent.pull = new WPSiteSyncContent_Pull();
 
 jQuery(document).ready(function () {
+	// TODO: create an .init() method and move this into the method
 	jQuery(document).on('sync_api_call', function (e, push_xhr)
 	{
 //		wpsitesynccontent.push_xhr.beforeSend = function (xhr, opts)
@@ -253,6 +255,7 @@ jQuery(document).ready(function () {
 			} else if (0 !== response.error_code) {
 				wpsitesynccontent.set_message(response.error_message, false, true);
 			} else {
+				// TODO: display a dialog with an error message to alert the user
 console.log('Failed to execute API.');
 			}
 		};
@@ -264,7 +267,7 @@ console.log('Failed to execute API.');
 		jQuery('#sync-pull-dialog').dialog('close');
 	});
 
-	jQuery('#sync-pull-search').keyup(_.debounce(wpsitesynccontent.pull.search, 3000));
+	jQuery('#sync-pull-search').keyup(_.debounce(wpsitesynccontent.pull.search, 2000));
 
 	jQuery('#sync-pull-search-results').on('click', '.sync-pull-row', function() {
 		jQuery(this).addClass('selected');
