@@ -270,6 +270,7 @@ console.log('Failed to execute API.');
 	jQuery('#sync-pull-search').keyup(_.debounce(wpsitesynccontent.pull.search, 2000));
 
 	jQuery('#sync-pull-search-results').on('click', '.sync-pull-row', function() {
+		jQuery('#sync-pull-search-results .sync-pull-row').removeClass('selected');
 		jQuery(this).addClass('selected');
 		wpsitesynccontent.pull.target_post_id = jQuery(this).attr('id').substr(13);
 		jQuery('#sync-pull-selected').prop('disabled', false);
