@@ -363,7 +363,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			}
 			echo '>';
 			echo __('Pull into new Post', 'wpsitesync-pull');
-			echo ' &nbsp; <button id="sync-pull-selected" type="button" onclick="wpsitesynccontent.pull.pull(';
+			echo ' &nbsp; <button id="sync-pull-selected" type="button" disabled="disabled" onclick="wpsitesynccontent.pull.pull(';
 			if (0 !== $target_post_id) {
 				echo esc_attr($target_post_id);
 			} else
