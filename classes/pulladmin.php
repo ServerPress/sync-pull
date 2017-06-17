@@ -353,23 +353,21 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			echo $this->add_pull_ui_messages();
 
 			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
-			if ('post' === $screen->base) {
-				echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked">';
+//			if ('post' === $screen->base) {
+				echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked" />';
 				echo __('Pull Content into current Post', 'wpsitesync-pull');
-			}
+//			}
 			echo ' &nbsp; <input type="radio" id="sync-pull-new" name="sync-pull-where" value="new"';
 			if ('edit' === $screen->base) {
 				echo ' checked="checked"';
 			}
-			echo '>';
+			echo ' />';
 			echo __('Pull into new Post', 'wpsitesync-pull');
-			echo ' &nbsp; <button id="sync-pull-selected" type="button" disabled="disabled" onclick="wpsitesynccontent.pull.pull(';
-			if (0 !== $target_post_id) {
-				echo esc_attr($target_post_id);
-			} else
-				echo '0';
-			echo '); return false;" class="button button-primary" title="', __('Pull Selected Content', 'wpsitesync-pull'), '">',
-				'<span class="sync-button-icon sync-button-icon-rotate dashicons dashicons-migrate"></span>', __('Pull Selected Content', 'wpsitesync-pull'),
+			echo ' &nbsp; <button id="sync-pull-selected" type="button" disabled="disabled" ',
+				' onclick="wpsitesynccontent.pull.pull(', abs($target_post_id), '); return false;" class="button button-primary" ',
+				' title="', __('Pull Selected Content', 'wpsitesync-pull'), '">';
+			echo '<span class="sync-button-icon sync-button-icon-rotate dashicons dashicons-migrate"></span>',
+				__('Pull Selected Content', 'wpsitesync-pull'),
 				'</button>';
 
 			echo '</p></div></div>'; // close dialog HTML
