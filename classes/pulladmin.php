@@ -355,14 +355,14 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
 //			if ('post' === $screen->base) {
 				echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked" />';
-				echo __('Pull Content into current Post', 'wpsitesync-pull');
+				echo __('Pull into current Content', 'wpsitesync-pull');
 //			}
 			echo ' &nbsp; <input type="radio" id="sync-pull-new" name="sync-pull-where" value="new"';
 			if ('edit' === $screen->base) {
 				echo ' checked="checked"';
 			}
 			echo ' />';
-			echo __('Pull into new Post', 'wpsitesync-pull');
+			echo __('Pull into new Content', 'wpsitesync-pull');
 			echo ' &nbsp; <button id="sync-pull-selected" type="button" disabled="disabled" ',
 				' onclick="wpsitesynccontent.pull.pull(', abs($target_post_id), '); return false;" class="button button-primary" ',
 				' title="', __('Pull Selected Content', 'wpsitesync-pull'), '">';

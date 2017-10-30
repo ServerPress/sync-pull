@@ -339,7 +339,9 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 					's' => $search,
 					'nopaging' => TRUE,
 					'posts_per_page' => '100',
-					'orderby' => 'none',
+					'orderby' => 'post_date',
+					'order' => 'desc',
+					'post_status' => array('publish', 'pending', 'draft', 'future', 'private', 'trash'),
 					'cache_results' => FALSE,
 					'update_post_meta_cache' => FALSE,
 					'update_post_term_cache' => FALSE,
@@ -350,7 +352,7 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 				ob_start();
 
 				if ($query->have_posts()) {
-					echo '<p>', sprintf(__('Found %d posts matching search. Click on an item below to select it, then you can Pull.', 'wpsitesync-pull'), $query->post_count), '</p>';
+					echo '<p>', sprintf(__('Found %d items matching search. Click on an item below to select it, then you can Pull.', 'wpsitesync-pull'), $query->post_count), '</p>';
 
 					echo '<div id="sync-pull-results-header" class="sync-pull-row">
 						<div class="sync-pull-column-id">', __('ID', 'wpsitesync-pull'), '</div>
@@ -358,8 +360,10 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 						<div class="sync-pull-column-content">', __('Content', 'wpsitesync-pull'), '</div>
 						<div class="sync-pull-column-modified">', __('Modified', 'wpsitesync-pull'), '</div>
 						<div class="sync-pull-column-author">', __('Author', 'wpsitesync-pull'), '</div>
+						<div class="sync-pull-column-status">', __('Status', 'wpsitesync-pull'), '</div>
 					</div>';
 
+					global $post;
 					while ($query->have_posts()) {
 						$query->the_post();
 						?>
@@ -369,11 +373,22 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 							<div class="sync-pull-column-content"><?php echo get_the_excerpt(); ?></div>
 							<div class="sync-pull-column-modified"><?php the_modified_date(); ?></div>
 							<div class="sync-pull-column-author"><?php the_author(); ?></div>
+							<div class="sync-pull-column-status"><?php
+								switch ($post->post_status) {
+								case 'publish': echo 'published';	break;
+								case 'pending': echo 'pending';		break;
+								case 'draft':	echo 'draft';		break;
+								case 'future':	echo 'future';		break;
+								case 'private':	echo 'private';		break;
+								case 'trash':	echo 'trash';		break;
+								default:		echo ' ';			break;
+								}
+							?></div>
 						</div>
 						<?php
 					}
 				} else {
-					echo __('No posts found that match your search. Try searching for something else.', 'wpsitesync-pull');
+					echo __('No Content found that match your search. Try searching for something else.', 'wpsitesync-pull');
 				}
 
 				$search_results = ob_get_clean();
