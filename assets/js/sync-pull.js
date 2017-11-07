@@ -261,7 +261,12 @@ console.log('Failed to execute API.');
 		};
 	});
 
-	jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
+	if (0 === jQuery('#post-query-submit').length) {
+		// WP 4.8+ if input field doesn't exist.... #23
+		jQuery('#posts-filter .tablenav').html(jQuery('#sync-pull-search-ui').html());
+	} else {
+		jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
+	}
 
 	jQuery('#sync-pull-cancel').on('click', function() {
 		jQuery('#sync-pull-dialog').dialog('close');
