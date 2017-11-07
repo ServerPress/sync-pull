@@ -176,7 +176,7 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 
 				$sync_data = $model->get_sync_target_post($source_post_id, SyncOptions::get('target_site_key'));
 
-				if ($target_post_id !== $sync_data->target_post_id) {
+				if (NULL !== $sync_data && $target_post_id !== $sync_data->target_post_id) {
 					$model->remove_sync_data($source_post_id);
 					$model->remove_sync_data($target_post_id);
 					$meta_key = '_spectrom_sync_details_' . sanitize_key(SyncOptions::get('target'));
@@ -505,7 +505,7 @@ SyncDebug::log(__METHOD__.'() - found ' . count($_POST['pull_media']) . ' media 
 			} else if ('pullsearch' === $action) {
 SyncDebug::log(__METHOD__ . '() response from API request: ' . var_export($response, TRUE));
 				$api_response = NULL;
-				if (isset($response->response)) {
+				if (isset($response->response) && isset($response->response->data->search_results)) {
 SyncDebug::log(__METHOD__ . '() decoding response: ' . var_export($response->response, TRUE));
 					$api_response = $response->response;
 					$response->set('search_results', $response->response->data->search_results);
