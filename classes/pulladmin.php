@@ -322,8 +322,16 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 		if (is_object($screen) && ('post' === $screen->base || 'edit' === $screen->base)) {
 			global $post;
 
-			$post_type = get_post_type_object(get_post_type());
-			$title = sprintf(__('Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type->labels->singular_name, SyncOptions::get('host'));
+			$post_type = get_post_type();
+			if (FALSE === $post_type) {
+				if (isset($_GET['post_type']))
+					$post_type = $_GET['post_type'];
+				else
+					$post_type = 'post';
+			}
+			$post_type_info = get_post_type_object($post_type);
+
+			$title = sprintf(__('Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type_info->labels->singular_name, SyncOptions::get('host'));
 			$sync_model = new SyncModel();
 			$target_post_id = 0;
 
