@@ -37,7 +37,7 @@ class SyncPullAdmin
 	public function admin_enqueue_scripts($hook_suffix)
 	{
 		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync', 'jquery', 'underscore', 'jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
-		wp_register_style('sync-pull', WPSiteSync_Pull::get_asset('css/sync-pull.css'), array('wp-jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION);
+		wp_register_style('sync-pull', WPSiteSync_Pull::get_asset('css/sync-pull.css'), array('wp-jquery-ui-dialog', 'sync-admin'), WPSiteSync_Pull::PLUGIN_VERSION);
 
 		if ('post.php' === $hook_suffix || 'edit.php' === $hook_suffix) {
 			wp_enqueue_script('sync-pull');
