@@ -333,6 +333,11 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 					return TRUE;
 				}
 
+				// build a list of all the post status values we need to look for #146
+				$stati = get_post_stati();
+				// not looking for auto-draft (won't be edited) and inherit (we want only content not images)
+				$post_stati = array_diff(array_keys($stati), array('auto-draft', 'inherit'));
+
 				// search for results
 				$args = array(
 					'post_type' => array($post_type),
@@ -341,7 +346,7 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 					'posts_per_page' => '100',
 					'orderby' => 'post_date',
 					'order' => 'desc',
-					'post_status' => array('publish', 'pending', 'draft', 'future', 'private', 'trash'),
+					'post_status' => $post_stati, // array('publish', 'pending', 'draft', 'future', 'private', 'trash'),
 					'cache_results' => FALSE,
 					'update_post_meta_cache' => FALSE,
 					'update_post_term_cache' => FALSE,
