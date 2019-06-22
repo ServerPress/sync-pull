@@ -331,7 +331,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 			}
 			$post_type_info = get_post_type_object($post_type);
 
-			$title = sprintf(__('Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type_info->labels->singular_name, SyncOptions::get('host'));
+			$title = sprintf(__('WPSiteSync&#8482;: Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type_info->labels->singular_name, SyncOptions::get('host'));
 			$sync_model = new SyncModel();
 			$target_post_id = 0;
 
@@ -351,7 +351,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 					echo '<p>',
 						__('There is no post on the Target site that is currently associated with this post.', 'wpsitesync-pull'), '<br/>',
 						__('Search for something by entering a search phrase above, then select Content from the search results.', 'wpsitesync-pull'), '<br/>',
-						__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a a new post.', 'wpsitesync-pull'),
+						__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a a new post with that Content.', 'wpsitesync-pull'),
 						'</p>';
 				}
 				echo '</div>';		// contains content detail information
@@ -394,7 +394,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 		<div id="sync-pull-search-ui" style="display:none">
 			<button class="sync-pull button sync-button button-primary" onclick="wpsitesynccontent.pull.show_dialog()"
 			 type="button" title="<?php esc_attr_e('Search to Pull Content from the Target site', 'wpsitesync-pull'); ?>">
-			<?php esc_html_e('Search for Pull', 'wpsitesync-pull'); ?>
+			<span class="sync-button-icon dashicons dashicons-search"></span><?php esc_html_e('Search for Pull', 'wpsitesync-pull'); ?>
 			</button>
 		</div>
 <?php

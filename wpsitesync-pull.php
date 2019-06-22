@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: WPSiteSync for Pull
-Plugin URI: http://wpsitesync.com
+Plugin URI: https://wpsitesync.com/downloads/wpsitesync-for-pull/
 Description: Allow Content Creators to "Pull" Content from the Target site into the Source site.
 Author: WPSiteSync
-Author URI: http://wpsitesync.com
-Version: 2.0
+Author URI: https://wpsitesync.com
+Version: 2.1
 Text Domain: wpsitesync-pull
 
 The PHP code portions are distributed under the GPL license. If not otherwise stated, all
@@ -28,7 +28,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		private static $_instance = NULL;
 
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
-		const PLUGIN_VERSION = '2.0';
+		const PLUGIN_VERSION = '2.1';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31'; // '1a127f14595c88504b22839abc40708c';
 
 		private $_license = NULL;
@@ -58,6 +58,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		 */
 		public function init()
 		{
+//SyncDebug::log(__METHOD__.'():' . __LINE__ . ' adding active extension check');
 			add_filter('spectrom_sync_active_extensions', array($this, 'filter_active_extensions'), 10, 2);
 
 			$this->_license = WPSiteSyncContent::get_instance()->get_license(); // new SyncLicensing();
@@ -858,12 +859,14 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($respon
 		 */
 		public function filter_active_extensions($extensions, $set = FALSE)
 		{
+//SyncDebug::log(__METHOD__.'():' . __LINE__ . ' checking active extensions set=' . ($set ? 'TRUE' : 'FALSE'));
 			if ($set || $this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
 				$extensions['sync_pull'] = array(
 					'name' => self::PLUGIN_NAME,
 					'version' => self::PLUGIN_VERSION,
 					'file' => __FILE__,
 				);
+//SyncDebug::log(__METHOD__.'():' . __LINE__ . ' returning ' . var_export($extensions, TRUE));
 			return $extensions;
 		}
 	}

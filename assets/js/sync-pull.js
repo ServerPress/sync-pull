@@ -1,10 +1,10 @@
 /*
- * @copyright Copyright (C) 2015 SpectrOMtech.com. - All Rights Reserved.
+ * @copyright Copyright (C) 2015-2019 WPSiteSync.com. - All Rights Reserved.
  * @license GNU General Public License, version 2 (http://www.gnu.org/licenses/gpl-2.0.html)
- * @author SpectrOMtech.com <hello@SpectrOMtech.com>
- * @url https://www.SpectrOMtech.com/products/
+ * @author WPSiteSync.com <hello@WPSiteSync.com>
+ * @url https://wpsitesync.com/downloads/wpsitesync-for-pull/
  * The PHP code portions are distributed under the GPL license. If not otherwise stated, all images, manuals, cascading style sheets, and included JavaScript *are NOT GPL, and are released under the SpectrOMtech Proprietary Use License v1.0
- * More info at https://SpectrOMtech.com/products/
+ * More info at https://wpsitesync.com/downloads/
  */
 
 function WPSiteSyncContent_Pull()
@@ -14,13 +14,22 @@ function WPSiteSyncContent_Pull()
 	this.post_id = null;
 }
 
+WPSiteSyncContent_Pull.prototype.log = function(msg, data)
+{
+	if ('undefined' !== typeof(console.log)) {
+		console.log('.pull: ' + msg)
+		if ('undefined' !== typeof(data))
+			console.log(data);
+	}
+};
+
 /**
  * Add Dialog Modal
  * @param {int} post_id The post id
  */
 WPSiteSyncContent_Pull.prototype.show_dialog = function(post_id)
 {
-console.log('.pull.show_dialog()');
+this.log('show_dialog()');
 
 	if ('undefined' !== typeof(post_id))
 		this.post_id = post_id;
@@ -34,12 +43,20 @@ console.log('.pull.show_dialog()');
 		height: 'auto',
 		width: 700,
 		modal: true,
+		zindex: 1001,
 		dialogClass: 'wp-dialog',
 		closeOnEscape: true,
-		close: function (event, ui) {
+		close: function(event, ui) {
 			jQuery('#sync-temp').replaceWith(message_container);
 		}
 	});
+	// if not on the edit page, need to adjust the z-index of the dialog box and the overlay
+	var pagename = window.location + '';
+this.log('show_dialog() pagename=' + pagename);
+	if (-1 === pagename.indexOf('edit.php')) {
+		jQuery('.ui-widget-overlay.ui-front').css('z-index', '1000');
+		jQuery('.ui-dialog.ui-widget.ui-widget-content.wp-dialog').css('z-index', '1001');
+	}
 };
 
 /**
@@ -47,7 +64,7 @@ console.log('.pull.show_dialog()');
  */
 WPSiteSyncContent_Pull.prototype.show = function()
 {
-console.log('.pull.show()');
+this.log('show()');
 	this.hide_msgs();
 	jQuery('#sync-pull-container').show();
 	jQuery('#sync-pull').hide();
@@ -61,10 +78,10 @@ console.log('.pull.show()');
  */
 WPSiteSyncContent_Pull.prototype.action = function(post_id, confirmation)
 {
-console.log('WPSiteSyncContent.pull.action(' + post_id + ')');
+this.log('action(' + post_id + ')');
 
 	var data = { action: 'spectrom_sync', operation: 'pull', post_id: post_id };
-console.log(data);
+this.log('data=', data);
 
 	jQuery('.pull-actions').hide();
 	jQuery('.pull-loading-indicator').show();
@@ -76,12 +93,11 @@ console.log(data);
 		data: data,
 		url: ajaxurl,
 		success: function(response) {
-console.log('in ajax success callback');
+wpsitesynccontent.pull.log('in ajax success callback');
 //			jQuery('.pull-actions').show();
 //			jQuery('.pull-loading-indicator').hide();
 
-console.log(' - response:');
-console.log(response);
+wpsitesynccontent.pull.log(' - response:', response);
 			if (response.success) {
 //				jQuery('.tb-close-icon').trigger('click');
 //				alert(response.notices[0]);
@@ -93,7 +109,7 @@ console.log(response);
 				wpsitesynccontent.set_message(response.error_message, false, true, 'sync-error');
 			} else {
 				// TODO: use a dialog box not an alert
-console.log('Failed to execute API.');
+wpsitesynccontent.pull.log('Failed to execute API.');
 //				alert('Failed to fetch data.');
 			}
 		}
@@ -105,7 +121,7 @@ console.log('Failed to execute API.');
  */
 WPSiteSyncContent_Pull.prototype.cancel = function()
 {
-console.log('.pull.cancel()');
+this.log('cancel()');
 	jQuery('#sync-pull-container').hide();
 	jQuery('#sync-pull').show();
 };
@@ -118,7 +134,7 @@ console.log('.pull.cancel()');
  */
 WPSiteSyncContent_Pull.prototype.check_modified_timestamp = function(xhr, opts)
 {
-console.log('.pull.check_modified_timestamp()');
+this.log('check_modified_timestamp()');
 	var data = {
 		action: 'spectrom_sync',
 		operation: 'check_modified_timestamp',
@@ -146,7 +162,7 @@ console.log('.pull.check_modified_timestamp()');
  */
 WPSiteSyncContent_Pull.prototype.hide_msgs = function()
 {
-console.log('.pull.hide_msgs()');
+this.log('hide_msgs()');
 	jQuery('#pull-loading-indicator').hide();
 	jQuery('#pull-failure-msg').hide();
 	jQuery('#pull-success-msg').hide();
@@ -210,17 +226,17 @@ WPSiteSyncContent_Pull.prototype.search = function()
 			url: ajaxurl,
 			success: function (response)
 			{
-console.log(response);
+wpsitesynccontent.pull.log('response=', response);
 				wpsitesynccontent.clear_message();
 				if (response.success) {
 					jQuery('#sync-pull-search-results').html(response.data.search_results).show();
 				} else if (0 !== response.error_code) {
 					wpsitesynccontent.set_message(response.error_message, false, false, 'sync-error');
 				} else {
-console.log('Failed to execute API.');
+wpsitesynccontent.pull.log('Failed to execute API.');
 				}
 			}
-			// TODO: implment callback for failure; display a message
+			// TODO: implement callback for failure; display a message
 		});
 	}
 
@@ -238,9 +254,10 @@ console.log('sync-pull: checking content');
 
 wpsitesynccontent.pull = new WPSiteSyncContent_Pull();
 
-jQuery(document).ready(function () {
+jQuery(document).ready(function() {
 	// TODO: create an .init() method and move this into the method
-	jQuery(document).on('sync_api_call', function (e, push_xhr)
+	// TODO: perform initialization on trigger response
+	jQuery(document).on('sync_api_call', function(e, push_xhr)
 	{
 //		wpsitesynccontent.push_xhr.beforeSend = function (xhr, opts)
 //		{
@@ -256,7 +273,7 @@ jQuery(document).ready(function () {
 				wpsitesynccontent.set_message(response.error_message, false, true);
 			} else {
 				// TODO: display a dialog with an error message to alert the user
-console.log('Failed to execute API.');
+wpsitesynccontent.pull.log('Failed to execute API.');
 			}
 		};
 	});
@@ -267,6 +284,8 @@ console.log('Failed to execute API.');
 	} else {
 		jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
 	}
+
+	// TODO: rework to remove need for on() calls on buttons
 
 	jQuery('#sync-pull-cancel').on('click', function() {
 		jQuery('#sync-pull-dialog').dialog('close');
