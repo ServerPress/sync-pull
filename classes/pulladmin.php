@@ -351,7 +351,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 					echo '<p>',
 						__('There is no post on the Target site that is currently associated with this post.', 'wpsitesync-pull'), '<br/>',
 						__('Search for something by entering a search phrase above, then select Content from the search results.', 'wpsitesync-pull'), '<br/>',
-						__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a a new post with that Content.', 'wpsitesync-pull'),
+						__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a new post with that Content.', 'wpsitesync-pull'),
 						'</p>';
 				}
 				echo '</div>';		// contains content detail information
