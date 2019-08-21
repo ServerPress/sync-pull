@@ -177,7 +177,7 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 
 				$sync_data = $model->get_sync_target_post($source_post_id, SyncOptions::get('target_site_key'));
 
-				if (NULL !== $sync_data && $target_post_id !== $sync_data->target_post_id) {
+				if (NULL !== $sync_data && $target_post_id !== $sync_data->target_content_id) {
 					$model->remove_sync_data($source_post_id);
 					$model->remove_sync_data($target_post_id);
 					$meta_key = '_spectrom_sync_details_' . sanitize_key(SyncOptions::get('target'));
