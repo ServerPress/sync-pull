@@ -42,6 +42,22 @@ class SyncPullAdmin
 		if ('post.php' === $hook_suffix || 'edit.php' === $hook_suffix) {
 			wp_enqueue_script('sync-pull');
 			wp_enqueue_style('sync-pull');
+
+			// setup the syncpulldata object
+			global $post;
+			$post_id = 0;
+			$post_type = '';
+			if (isset($post)) {
+				if (isset($post->ID))
+					$post_id = $post->ID;
+				if (isset($post->post_type))
+					$post_type = $post->post_type;
+			}
+			$data = array(
+				'post_id' => $post_id,
+				'post_type' => $post_type,
+			);
+			wp_localize_script('sync', 'syncpulldata', $data);
 		}
 	}
 
@@ -329,57 +345,68 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 				else
 					$post_type = 'post';
 			}
-			$post_type_info = get_post_type_object($post_type);
-
-			$title = sprintf(__('WPSiteSync&#8482;: Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type_info->labels->singular_name, SyncOptions::get('host'));
-			$sync_model = new SyncModel();
-			$target_post_id = 0;
-
-			// display dialog HTML
-			echo '<div id="sync-pull-dialog" style="display:none" title="', esc_html($title), '"><div id="spectrom_sync">';
-			echo '<p>', esc_html__('Search for', 'wpsitesync-pull');
-			echo ' <input type="search" id="sync-pull-search" value=""></p>';
-
-			if ('post' === $screen->base) {
-				echo '<div id="sync-details">';
-				if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post->ID, SyncOptions::get('target_site_key')))) {
-					// display associated content if it exists
-					$target_post_id = $sync_data->target_content_id;
-					$content_details = SyncAdmin::get_instance()->get_content_details();
-					echo $content_details;
-				} else {
-					echo '<p>',
-						__('There is no post on the Target site that is currently associated with this post.', 'wpsitesync-pull'), '<br/>',
-						__('Search for something by entering a search phrase above, then select Content from the search results.', 'wpsitesync-pull'), '<br/>',
-						__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a new post with that Content.', 'wpsitesync-pull'),
-						'</p>';
-				}
-				echo '</div>';		// contains content detail information
-			}
-			echo '<div id="sync-pull-search-results" style="display:none"></div>';
-
-			echo $this->add_pull_ui_messages();
-
-			echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
-//			if ('post' === $screen->base) {
-				echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked" />';
-				echo __('Pull into current Content', 'wpsitesync-pull');
-//			}
-			echo ' &nbsp; <input type="radio" id="sync-pull-new" name="sync-pull-where" value="new"';
-			if ('edit' === $screen->base) {
-				echo ' checked="checked"';
-			}
-			echo ' />';
-			echo __('Pull into new Content', 'wpsitesync-pull');
-			echo ' &nbsp; <button id="sync-pull-selected" type="button" disabled="disabled" ',
-				' onclick="wpsitesynccontent.pull.pull(', abs($target_post_id), '); return false;" class="button button-primary" ',
-				' title="', __('Pull Selected Content', 'wpsitesync-pull'), '">';
-			echo '<span class="sync-button-icon sync-button-icon-rotate dashicons dashicons-migrate"></span>',
-				__('Pull Selected Content', 'wpsitesync-pull'),
-				'</button>';
-
-			echo '</p></div></div>'; // close dialog HTML
+			$this->output_dialog_modal($post->ID, $post_type, $screen->base);
 		}
+	}
+
+	/**
+	 * Outputs HTML content for the Search Modal
+	 * @param int $post_id The post ID of the Content being edited
+	 * @param string $post_type The post type of the Content to be Pulled
+	 * @param string $screen_base The $screen->base value
+	 */
+	public function output_dialog_modal($post_id, $post_type, $screen_base = 'post')
+	{
+		$post_type_info = get_post_type_object($post_type);
+
+		$title = sprintf(__('WPSiteSync&#8482;: Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type_info->labels->singular_name, SyncOptions::get('host'));
+		$sync_model = new SyncModel();
+		$target_post_id = 0;
+
+		// display dialog HTML
+		echo '<div id="sync-pull-dialog" style="display:none" title="', esc_html($title), '"><div id="spectrom_sync">';
+		echo '<p>', esc_html__('Search for', 'wpsitesync-pull');
+		echo ' <input type="search" id="sync-pull-search" value=""></p>';
+
+		if ('post' === $screen_base) {
+			echo '<div id="sync-details">';
+			if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post_id, SyncOptions::get('target_site_key')))) {
+				// display associated content if it exists
+				$target_post_id = $sync_data->target_content_id;
+				$content_details = SyncAdmin::get_instance()->get_content_details();
+				echo $content_details;
+			} else {
+				echo '<p>',
+					__('There is no post on the Target site that is currently associated with this post.', 'wpsitesync-pull'), '<br/>',
+					__('Search for something by entering a search phrase above, then select Content from the search results.', 'wpsitesync-pull'), '<br/>',
+					__('Once a post from the Target is selected, you can choose to Pull that into the current post, or create a new post with that Content.', 'wpsitesync-pull'),
+					'</p>';
+			}
+			echo '</div>';		// contains content detail information
+		}
+		echo '<div id="sync-pull-search-results" style="display:none"></div>';
+
+		echo $this->add_pull_ui_messages();
+
+		echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
+//			if ('post' === $screen->base) {
+			echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked" />';
+			echo __('Pull into current Content', 'wpsitesync-pull');
+//			}
+		echo ' &nbsp; <input type="radio" id="sync-pull-new" name="sync-pull-where" value="new"';
+		if ('edit' === $screen_base) {
+			echo ' checked="checked"';
+		}
+		echo ' />';
+		echo __('Pull into new Content', 'wpsitesync-pull');
+		echo ' &nbsp; <button id="sync-pull-selected" type="button" disabled="disabled" ',
+			' onclick="wpsitesynccontent.pull.pull(', abs($target_post_id), '); return false;" class="button button-primary" ',
+			' title="', __('Pull Selected Content', 'wpsitesync-pull'), '">';
+		echo '<span class="sync-button-icon sync-button-icon-rotate dashicons dashicons-migrate"></span>',
+			__('Pull Selected Content', 'wpsitesync-pull'),
+			'</button>';
+
+		echo '</p></div></div>'; // close dialog HTML
 	}
 
 	/**
