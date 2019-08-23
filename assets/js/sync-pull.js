@@ -392,12 +392,14 @@ wpsitesynccontent.pull.log('Failed to execute API.');
 	});
 
 	// inject buttons on posts (list view) page
-	if (0 === jQuery('#post-query-submit').length) {
-		// WP 4.8+ if input field doesn't exist.... #23
-		jQuery('#posts-filter .tablenav').html(jQuery('#sync-pull-search-ui').html());
-	} else {
-		jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
-	}
+	if (0 !== jQuery('#sync-pull-search-ui').length) {
+		if (0 === jQuery('#post-query-submit').length) {
+			// WP 4.8+ if input field doesn't exist.... #23
+			jQuery('#posts-filter .tablenav').html(jQuery('#sync-pull-search-ui').html());
+		} else {
+			jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
+		}
+	} else console.log('no ui- no permissions');
 
 	// TODO: rework to remove need for on() calls on buttons
 

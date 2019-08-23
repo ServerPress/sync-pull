@@ -1,8 +1,8 @@
 <?php
 
 /*
- * Allows management of users between the Source and Target sites and allow posting of content on behalf of users on the Target site
- * @package Sync
+ * Allows user to move content from Target site to Source site
+ * @package WPSiteSync
  * @author Dave Jesch
  */
 class SyncPullAdmin
@@ -11,13 +11,15 @@ class SyncPullAdmin
 
 	private function __construct()
 	{
-		add_filter('spectrom_sync_ajax_operation', array($this, 'check_ajax_query'), 10, 3);
+		if (SyncOptions::has_cap()) {
+			add_filter('spectrom_sync_ajax_operation', array($this, 'check_ajax_query'), 10, 3);
 
-		add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
-		add_action('spectrom_sync_metabox_after_button', array($this, 'add_pull_to_metabox'), 10, 1);
-		//add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
-		add_action('admin_footer', array($this, 'add_dialog_modal'));
-		add_action('admin_print_scripts-edit.php', array($this, 'print_hidden_div'));
+			add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+			add_action('spectrom_sync_metabox_after_button', array($this, 'add_pull_to_metabox'), 10, 1);
+			//add_action('spectrom_sync_ui_messages', array($this, 'add_pull_ui_messages'));
+			add_action('admin_footer', array($this, 'add_dialog_modal'));
+			add_action('admin_print_scripts-edit.php', array($this, 'print_hidden_div'));
+		}
 	}
 
 	/*
@@ -39,7 +41,7 @@ class SyncPullAdmin
 		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync', 'jquery', 'underscore', 'jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
 		wp_register_style('sync-pull', WPSiteSync_Pull::get_asset('css/sync-pull.css'), array('wp-jquery-ui-dialog', 'sync-admin'), WPSiteSync_Pull::PLUGIN_VERSION);
 
-		if ('post.php' === $hook_suffix || 'edit.php' === $hook_suffix) {
+		if (SyncOptions::has_cap() && ('post.php' === $hook_suffix || 'edit.php' === $hook_suffix)) {
 			wp_enqueue_script('sync-pull');
 			wp_enqueue_style('sync-pull');
 
@@ -312,6 +314,10 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 		}
  */
 	}
+
+	/**
+	 * Adds messages used in Pull UI operations to the DOM
+	 */
 	public function add_pull_ui_messages()
 	{
 		echo '<div id="sync-message-container" style="display:none">
@@ -326,11 +332,12 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 
 	/**
 	 * Add the HTML for a jQuery Dialog modal
-	 *
-	 * @since 1.0.0
 	 */
 	public function add_dialog_modal()
 	{
+		if (!SyncOptions::has_cap())
+			return;
+
 		$screen = get_current_screen();
 
 		// if on the post.php screen
@@ -357,6 +364,9 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 	 */
 	public function output_dialog_modal($post_id, $post_type, $screen_base = 'post')
 	{
+		if (!SyncOptions::has_cap())
+			return;
+
 		$post_type_info = get_post_type_object($post_type);
 
 		$title = sprintf(__('WPSiteSync&#8482;: Search for %1$s Content on Target: %2$s', 'wpsitesync-pull'), $post_type_info->labels->singular_name, SyncOptions::get('host'));
@@ -411,20 +421,21 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 
 	/**
 	 * Prints hidden button ui div
-	 *
-	 * @since 1.0.0
-	 * @return void
 	 */
 	public function print_hidden_div()
 	{
+		if (SyncOptions::has_cap()) {
+			// make sure user has capability to perform Sync options
 ?>
-		<div id="sync-pull-search-ui" style="display:none">
-			<button class="sync-pull button sync-button button-primary" onclick="wpsitesynccontent.pull.show_dialog()"
-			 type="button" title="<?php esc_attr_e('Search to Pull Content from the Target site', 'wpsitesync-pull'); ?>">
-			<span class="sync-button-icon dashicons dashicons-search"></span><?php esc_html_e('Search for Pull', 'wpsitesync-pull'); ?>
-			</button>
-		</div>
+			<div id="sync-pull-search-ui" style="display:none">
+<!-- cap=<?php if (SyncOptions::has_cap()) echo 'has cap'; else echo 'does not have cap'; ?> -->
+				<button class="sync-pull button sync-button button-primary" onclick="wpsitesynccontent.pull.show_dialog()"
+				 type="button" title="<?php esc_attr_e('Search to Pull Content from the Target site', 'wpsitesync-pull'); ?>">
+				<span class="sync-button-icon dashicons dashicons-search"></span><?php esc_html_e('Search for Pull', 'wpsitesync-pull'); ?>
+				</button>
+			</div>
 <?php
+		}
 	}
 }
 

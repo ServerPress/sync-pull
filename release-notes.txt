@@ -1,0 +1,2 @@
+* enhancement: Modify Javascript and CSS to allow Search Dialog UI to be presented on non wp-admin pages, such as Beaver Builder editor.
+* enhancement: Add checks so the Pull UI and operations are only allowed when user meets WPSiteSync configured Roles.
