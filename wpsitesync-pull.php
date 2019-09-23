@@ -5,7 +5,7 @@ Plugin URI: https://wpsitesync.com/downloads/wpsitesync-for-pull/
 Description: Allow Content Creators to "Pull" Content from the Target site into the Source site.
 Author: WPSiteSync
 Author URI: https://wpsitesync.com
-Version: 2.1
+Version: 2.2
 Text Domain: wpsitesync-pull
 
 The PHP code portions are distributed under the GPL license. If not otherwise stated, all
@@ -28,8 +28,8 @@ if (!class_exists('WPSiteSync_Pull')) {
 		private static $_instance = NULL;
 
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
-		const PLUGIN_VERSION = '2.1';
-		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31'; // '1a127f14595c88504b22839abc40708c';
+		const PLUGIN_VERSION = '2.2';
+		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
 
 		private $_license = NULL;
 		private $_push_controller = NULL;
@@ -499,6 +499,9 @@ SyncDebug::log(__METHOD__.'(): ' . __LINE__ . ' - checking for media items');
 SyncDebug::log(__METHOD__.'() - found ' . count($_POST['pull_media']) . ' media items');
 						$this->_handle_media(intval($_POST['target_post_id']), $_POST['pull_media'], $response);
 					}
+
+					// signal end of processing
+					do_action('spectrom_sync_pull_complete');
 
 					$_POST = $save_post;
 					if (0 === $response->get_error_code()) {
