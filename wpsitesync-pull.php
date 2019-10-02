@@ -5,7 +5,7 @@ Plugin URI: https://wpsitesync.com/downloads/wpsitesync-for-pull/
 Description: Allow Content Creators to "Pull" Content from the Target site into the Source site.
 Author: WPSiteSync
 Author URI: https://wpsitesync.com
-Version: 2.2
+Version: 2.2.1
 Text Domain: wpsitesync-pull
 
 The PHP code portions are distributed under the GPL license. If not otherwise stated, all
@@ -28,7 +28,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		private static $_instance = NULL;
 
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
-		const PLUGIN_VERSION = '2.2';
+		const PLUGIN_VERSION = '2.2.1';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
 
 		private $_license = NULL;
