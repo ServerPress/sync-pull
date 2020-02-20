@@ -205,7 +205,7 @@ SyncDebug::log(' - no error, setting success');
 	 */
 	public function add_pull_to_metabox($error)
 	{
-SyncDebug::log(__METHOD__.'(error=' . var_export($error, TRUE) . ')');
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' (error=' . var_export($error, TRUE) . ')');
 		$lic = WPSiteSyncContent::get_instance()->get_license(); // new SyncLicensing();
 		if ($error || !$lic->check_license('sync_pull', WPSiteSync_Pull::PLUGIN_KEY, WPSiteSync_Pull::PLUGIN_NAME))
 			return;
@@ -213,6 +213,10 @@ SyncDebug::log(__METHOD__.'(error=' . var_export($error, TRUE) . ')');
 		$auth = SyncOptions::is_auth(); // abs(SyncOptions::get('auth', '0'));
 		$target = SyncOptions::get('host', '');
 		if (!$auth || empty($target))
+			return;
+
+		// allow add-on to disable Pull as desired
+		if (!apply_filters('spectrom_sync_show_pull', TRUE))
 			return;
 
 		global $post;
