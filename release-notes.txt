@@ -1,1 +1,2 @@
 * fix: address issue when using older versions of WPSiteSync Pull.
+* enhancement: add filters to allow add-ons to conditionally disable Pull button.
