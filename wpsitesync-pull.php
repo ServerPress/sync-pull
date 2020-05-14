@@ -30,6 +30,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
 		const PLUGIN_VERSION = '2.2.2';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
+		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize 1.5.5
 
 		private $_license = NULL;
 		private $_push_controller = NULL;
@@ -39,7 +40,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 //SyncDebug::log(__METHOD__.'()');
 			add_action('spectrom_sync_init', array($this, 'init'));
 			if (is_admin())
-				add_action('wp_loaded', array($this, 'wp_loaded'));
+				add_action('wp_loaded', array($this, 'wp_loaded'));		// checks that WPSiteSync is running
 		}
 
 		/*
@@ -65,17 +66,46 @@ if (!class_exists('WPSiteSync_Pull')) {
 			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
 				return;
 
-			if (is_admin()) {
-				$this->load_class('pulladmin');
-				SyncPullAdmin::get_instance();
-			}
-
-			add_filter('spectrom_sync_api_request_action', array($this, 'api_request'), 20, 3);		// called by SyncApiRequest
-			add_filter('spectrom_sync_api', array($this, 'api_controller_request'), 10, 3);			// called by SyncApiController
-			add_action('spectrom_sync_api_request_response', array($this, 'api_response'), 10, 3);		// called by SyncApiRequest->api()
+			if (is_admin())
+				add_action('wp_loaded', array($this, 'pull_init'));
+			add_action('spectrom_sync_api_init', array($this, 'api_init'));
 
 			add_filter('spectrom_sync_error_code_to_text', array($this, 'filter_error_codes'), 10, 2);
 			add_filter('spectrom_sync_notice_code_to_text', array($this, 'filter_notice_codes'), 10, 2);
+		}
+
+		/**
+		 * Initialize hooks and filters for API handling
+		 */
+		public function api_init()
+		{
+			add_filter('spectrom_sync_api_request_action', array($this, 'api_request'), 20, 3);		// called by SyncApiRequest
+			add_filter('spectrom_sync_api', array($this, 'api_controller_request'), 10, 3);			// called by SyncApiController
+			add_action('spectrom_sync_api_request_response', array($this, 'api_response'), 10, 3);		// called by SyncApiRequest->api()
+		}
+
+		/**
+		 * Initialize the admin interface after all plugins have been loaded
+		 */
+		public function pull_init()
+		{
+			// this needs to be loaded after all plugins have initialized. This allows
+			// plugins a chance to add filters for 'spectrom_sync_allowed_post_types'
+			$this->load_class('pulladmin');
+			SyncPullAdmin::get_instance();
+		}
+
+		/**
+		 * Helper method to display notices
+		 * @param string $msg Message to display within notice
+		 * @param string $class The CSS class used on the <div> wrapping the notice
+		 * @param boolean $dismissable TRUE if message is to be dismissable; otherwise FALSE.
+		 */
+		private function _show_notice($msg, $class = 'notice-success', $dismissable = FALSE)
+		{
+			echo '<div class="notice ', $class, ' ', ($dismissable ? 'is-dismissible' : ''), '">';
+			echo '<p>', $msg, '</p>';
+			echo '</div>';
 		}
 
 		/**
@@ -83,9 +113,15 @@ if (!class_exists('WPSiteSync_Pull')) {
 		 */
 		public function wp_loaded()
 		{
+			// make sure WPSiteSync is running
 			if (!class_exists('WPSiteSyncContent', FALSE) && current_user_can('activate_plugins')) {
 				if (is_admin())
 					add_action('admin_notices', array($this, 'notice_requires_wpss'));
+			} else {
+				// check for minimum WPSiteSync version
+				if (is_admin() && version_compare(WPSiteSyncContent::PLUGIN_VERSION, self::REQUIRED_VERSION) < 0 && current_user_can('activate_plugins')) {
+					add_action('admin_notices', array($this, 'notice_minimum_version'));
+				}
 			}
 		}
 
@@ -100,16 +136,14 @@ if (!class_exists('WPSiteSync_Pull')) {
 		}
 
 		/**
-		 * Helper method to display notices
-		 * @param string $msg Message to display within notice
-		 * @param string $class The CSS class used on the <div> wrapping the notice
-		 * @param boolean $dismissable TRUE if message is to be dismissable; otherwise FALSE.
+		 * Display admin notice to upgrade WPSiteSync for Content plugin
 		 */
-		private function _show_notice($msg, $class = 'notice-success', $dismissable = FALSE)
+		public function notice_minimum_version()
 		{
-			echo '<div class="notice ', $class, ' ', ($dismissable ? 'is-dismissible' : ''), '">';
-			echo	'<p>', $msg, '</p>';
-			echo '</div>';
+			$this->_show_notice(
+				sprintf(__('WPSiteSync for Pull requires version %1$s or greater of <em>WPSiteSync for Content</em> to be installed. Please <a href="2%s">click here</a> to update.', 'wpsitesync-pull'),
+					self::REQUIRED_VERSION, admin_url('plugins.php')),
+				'notice-warning');
 		}
 
 		/*

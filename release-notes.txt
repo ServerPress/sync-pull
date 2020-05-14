@@ -1,2 +1,5 @@
 * fix: address issue when using older versions of WPSiteSync Pull.
 * enhancement: add filters to allow add-ons to conditionally disable Pull button.
+* fix: only display "Search for Pull" button on list pages for allowed Post Types.
+* enhancement: update init process to use improved initialization mechanism with v1.5.5.
+* enhancment: check for minimum version of WPSiteSync.

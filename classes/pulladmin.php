@@ -5,12 +5,18 @@
  * @package WPSiteSync
  * @author Dave Jesch
  */
-class SyncPullAdmin
+class SyncPullAdmin extends SyncInput
 {
 	private static $_instance = NULL;
 
 	private function __construct()
 	{
+		// check the current post type against allowed / known post types
+		$post_type = $this->get('post_type', 'post');
+		$allowed_post_types = apply_filters('spectrom_sync_allowed_post_types', array('page', 'post'));
+		if (!in_array($post_type, $allowed_post_types))
+			return;
+
 		if (SyncOptions::has_cap()) {
 			add_filter('spectrom_sync_ajax_operation', array($this, 'check_ajax_query'), 10, 3);
 
