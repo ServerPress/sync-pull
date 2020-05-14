@@ -47,7 +47,9 @@ class SyncPullAdmin extends SyncInput
 		wp_register_script('sync-pull', WPSiteSync_Pull::get_asset('js/sync-pull.js'), array('sync', 'jquery', 'underscore', 'jquery-ui-dialog'), WPSiteSync_Pull::PLUGIN_VERSION, TRUE);
 		wp_register_style('sync-pull', WPSiteSync_Pull::get_asset('css/sync-pull.css'), array('wp-jquery-ui-dialog', 'sync-admin'), WPSiteSync_Pull::PLUGIN_VERSION);
 
-		if (SyncOptions::has_cap() && ('post.php' === $hook_suffix || 'edit.php' === $hook_suffix)) {
+		if (SyncOptions::has_cap() &&
+			('post.php' === $hook_suffix || 'edit.php' === $hook_suffix) ||
+			('post-new.php' === $hook_suffix && $this->is_gutenberg()) ) {
 			wp_enqueue_script('sync-pull');
 			wp_enqueue_style('sync-pull');
 
@@ -67,6 +69,118 @@ class SyncPullAdmin extends SyncInput
 			);
 			wp_localize_script('sync', 'syncpulldata', $data);
 		}
+	}
+
+	/**
+	 * Checks to see if Gutenberg is present (using function and /or WP version) and the page
+	 * is using Gutenberg
+	 * @return boolean TRUE if Gutenberg is present and used on current page
+	 */
+	private function is_gutenberg()
+	{
+		if (function_exists('is_gutenberg_page') && is_gutenberg_page())
+			return TRUE;
+		if (version_compare($GLOBALS['wp_version'], '5.0', '>=') && $this->is_gutenberg_page())
+			return TRUE;
+		return FALSE;
+	}
+
+	/**
+	 * Checks whether we're currently loading a Gutenberg page
+	 * @return boolean Whether Gutenberg is being loaded.
+	 */
+	private function is_gutenberg_page()
+	{
+		// taken from Gutenberg Plugin v4.8
+		if (!is_admin())
+			return FALSE;
+
+		/*
+		 * There have been reports of specialized loading scenarios where `get_current_screen`
+		 * does not exist. In these cases, it is safe to say we are not loading Gutenberg.
+		 */
+		if (!function_exists('get_current_screen'))
+			return FALSE;
+
+		if ('post' !== get_current_screen()->base)
+			return FALSE;
+
+		if (isset($_GET['classic-editor']))
+			return FALSE;
+
+		global $post;
+		if (!$this->gutenberg_can_edit_post($post))
+			return FALSE;
+
+		return TRUE;
+	}
+
+	/**
+	 * Return whether the post can be edited in Gutenberg and by the current user.
+	 * @param int|WP_Post $post Post ID or WP_Post object.
+	 * @return bool Whether the post can be edited with Gutenberg.
+	 */
+	private function gutenberg_can_edit_post($post)
+	{
+		// taken from Gutenberg Plugin v4.8
+		$post = get_post($post);
+		$can_edit = TRUE;
+
+		if (!$post)
+			$can_edit = FALSE;
+
+		if ($can_edit && 'trash' === $post->post_status)
+			$can_edit = FALSE;
+
+		if ($can_edit && !$this->gutenberg_can_edit_post_type($post->post_type))
+			$can_edit = FALSE;
+
+		if ($can_edit && !current_user_can('edit_post', $post->ID))
+			$can_edit = FALSE;
+
+		// Disable the editor if on the blog page and there is no content.
+		// TODO: this is probably not a necessary check for WPSS
+		if ($can_edit && abs(get_option('page_for_posts')) === $post->ID && empty($post->post_content))
+			$can_edit = FALSE;
+
+		/**
+		 * Filter to allow plugins to enable/disable Gutenberg for particular post.
+		 *
+		 * @param bool $can_edit Whether the post can be edited or not.
+		 * @param WP_Post $post The post being checked.
+		 */
+		return apply_filters('gutenberg_can_edit_post', $can_edit, $post);
+	}
+
+	/**
+	 * Return whether the post type can be edited in Gutenberg.
+	 *
+	 * Gutenberg depends on the REST API, and if the post type is not shown in the
+	 * REST API, then the post cannot be edited in Gutenberg.
+	 *
+	 * @param string $post_type The post type.
+	 * @return bool Whether the post type can be edited with Gutenberg.
+	 */
+	private function gutenberg_can_edit_post_type($post_type)
+	{
+		$can_edit = TRUE;
+		if (!post_type_exists($post_type))
+			$can_edit = FALSE;
+
+		if (!post_type_supports($post_type, 'editor'))
+			$can_edit = FALSE;
+
+		$post_type_object = get_post_type_object($post_type);
+		if ($post_type_object && !$post_type_object->show_in_rest)
+			$can_edit = FALSE;
+
+		/**
+		 * Filter to allow plugins to enable/disable Gutenberg for particular post types.
+		 *
+		 * @param bool $can_edit Whether the post type can be edited or not.
+		 * @param string $post_type The post type being checked.
+		 */
+		return apply_filters('gutenberg_can_edit_post_type', $can_edit, $post_type);
 	}
 
 	/**

@@ -3,3 +3,4 @@
 * fix: only display "Search for Pull" button on list pages for allowed Post Types.
 * enhancement: update init process to use improved initialization mechanism with v1.5.5.
 * enhancment: check for minimum version of WPSiteSync.
+* fix: problem with search modal not displaying in Gutenberg editor (Thanks Wessel K.)
