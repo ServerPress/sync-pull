@@ -4,3 +4,4 @@
 * enhancement: update init process to use improved initialization mechanism with v1.5.5.
 * enhancment: check for minimum version of WPSiteSync.
 * fix: problem with search modal not displaying in Gutenberg editor (Thanks Wessel K.)
+* fix: address runtime error when handling upload error messages.

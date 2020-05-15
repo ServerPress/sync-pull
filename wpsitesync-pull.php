@@ -30,7 +30,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
 		const PLUGIN_VERSION = '2.2.2';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
-		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize 1.5.5
+		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize  1.5.5
 
 		private $_license = NULL;
 		private $_push_controller = NULL;
@@ -683,7 +683,10 @@ SyncDebug::log(__METHOD__.'() returned: ' . var_export($file, TRUE));
 					if (!is_array($file) || isset($file['error'])) {
 //					if (is_wp_error($ret)) {
 						$has_error = TRUE;
-						$response->notice_code(SyncApiRequest::ERROR_FILE_UPLOAD, $ret->get_error_message());
+						$err_msg = __('Error returned from wp_handle_upload()', 'wpsitesync-pull');
+						if (isset($file['error']))
+							$err_msg = sprintf(__('Error returned from wp_handle_upload(): %1$s', 'wpsitesync-pull'), $file['error']);
+						$response->notice_code(SyncApiRequest::ERROR_FILE_UPLOAD, $err_msg /*$ret->get_error_message() #31 */ );
 					} else {
 						$upload_file = $upload_dir['baseurl'] . '/' . $time . '/' . basename($file['file']);
 
