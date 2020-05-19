@@ -432,6 +432,7 @@ SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search)
 					}
 				} else {
 					echo __('No Content found that match your search. Try searching for something else.', 'wpsitesync-pull');
+					echo ' <a href="https://wpsitesync.com/knowledgebase/wpsitesync-pull-error-messages/#error103" target="_blank" style="text-decoration:none"><span class="dashicons dashicons-info"></span></a>';
 				}
 
 				$search_results = ob_get_clean();
