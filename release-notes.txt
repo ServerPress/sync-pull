@@ -5,3 +5,4 @@
 * enhancment: check for minimum version of WPSiteSync.
 * fix: problem with search modal not displaying in Gutenberg editor (Thanks Wessel K.)
 * fix: address runtime error when handling upload error messages.
+* fix: problem with Cancel button not working.

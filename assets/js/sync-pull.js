@@ -15,6 +15,9 @@ function WPSiteSyncContent_Pull()
 	this.$dialog = null;								// jQuery reference to dialog instance if it exists
 }
 
+/**
+ * Initialize the Pull add-on
+ */
 WPSiteSyncContent_Pull.prototype.init = function()
 {
 	this.log('=initializing...');
@@ -115,7 +118,7 @@ this.log('show_dialog()');
 			wpsitesynccontent.pull.$dialog = null;						// dialog closed, clear the $dialog property
 		},
 		open: function(event, ui) {
-console.log('dialog is open, calling setup_handlers');
+wpsitesynccontent.pull.log('dialog is open, calling setup_handlers');
 			wpsitesynccontent.pull.setup_handlers();
 		}
 	});
@@ -187,6 +190,16 @@ wpsitesynccontent.pull.log('Failed to execute API.');
 			}
 		}
 	});
+};
+
+/**
+ * Closes the Pull Search dialog
+ * @returns {undefined}
+ */
+WPSiteSyncContent_Pull.prototype.close = function()
+{
+this.log('close');
+	jQuery('#sync-pull-dialog').dialog('close');
 };
 
 /**
@@ -328,18 +341,20 @@ WPSiteSyncContent_Pull.prototype.setup_handlers = function()
 {
 this.log('.setup_handlers()');
 	var dialog = jQuery('.ui-dialog.sync-pull-search');
-console.log(dialog);
+this.log(dialog);
 	this.$dialog = dialog;												// handlers setup, set $dialog property
 
+/*
 	jQuery('#sync-pull-cancel', dialog).on('click', function() {
 wpsitesynccontent.pull.log('#sync-pull-cancel button clicked');
 console.log(dialog);
 		jQuery(dialog).dialog('close');
-//		jQuery($dialog/*'#sync-pull-dialog'*/).dialog('close');
+//		jQuery($dialog/ *'#sync-pull-dialog'* /).dialog('close');
 	});
+*/
 
 wpsitesynccontent.pull.log('hooking #sync-pull-search keyup events');
-console.log(jQuery('#sync-pull-search'));
+wpsitesynccontent.pull.log(jQuery('#sync-pull-search'));
 	jQuery('#sync-pull-search', dialog).keyup(_.debounce(wpsitesynccontent.pull.search, 2000));
 
 	jQuery('#sync-pull-search-results', dialog).on('click', '.sync-pull-row', function() {
@@ -355,7 +370,7 @@ this.log('.setup_handlers() - complete');
 /*
 jQuery(document).ready(function() {
 	jQuery(document).on('sync_push', function(e, push_xhr) {
-console.log('sync-pull: checking content');
+wpsitesynccontent.pull.log('sync-pull: checking content');
 		push_xhr.beforeSend = function(xhr, opts) { wpsitesynccontent.pull.check_modified_timestamp(xhr, opts); };
 	});
 });
@@ -399,7 +414,7 @@ wpsitesynccontent.pull.log('Failed to execute API.');
 		} else {
 			jQuery('#post-query-submit').after(jQuery('#sync-pull-search-ui').html());
 		}
-	} else console.log('no ui- no permissions');
+	} else wpsitesynccontent.pull.log('no ui- no permissions');
 
 	// TODO: rework to remove need for on() calls on buttons
 

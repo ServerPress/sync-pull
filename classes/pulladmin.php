@@ -522,7 +522,8 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 
 		echo $this->add_pull_ui_messages();
 
-		echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
+		echo '<p><button id="sync-pull-cancel" type="button" class="button button-secondary" onclick="wpsitesynccontent.pull.close();"
+			title="', __('Cancel', 'wpsitesync-pull'), '">', __('Cancel', 'wpsitesync-pull'), '</button>';
 //			if ('post' === $screen->base) {
 			echo ' &nbsp; <input type="radio" id="sync-pull-current" name="sync-pull-where" value="current" checked="checked" />';
 			echo __('Pull into current Content', 'wpsitesync-pull');
