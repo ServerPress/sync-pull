@@ -30,7 +30,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
 		const PLUGIN_VERSION = '2.2.2';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
-		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize  1.5.5
+		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize
 
 		private $_license = NULL;
 		private $_push_controller = NULL;
@@ -79,7 +79,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		 */
 		public function api_init()
 		{
-			add_filter('spectrom_sync_api_request_action', array($this, 'api_request'), 20, 3);		// called by SyncApiRequest
+			add_filter('spectrom_sync_api_request_action', array($this, 'api_request'), 20, 4);		// called by SyncApiRequest
 			add_filter('spectrom_sync_api', array($this, 'api_controller_request'), 10, 3);			// called by SyncApiController
 			add_action('spectrom_sync_api_request_response', array($this, 'api_response'), 10, 3);		// called by SyncApiRequest->api()
 		}
@@ -166,9 +166,9 @@ if (!class_exists('WPSiteSync_Pull')) {
 		 */
 		// TODO: logic needs to be moved to a SyncPullApiRequest class
 		// TODO: ensure only called once Sync is initialized
-		public function api_request($args, $action, $remote_args)
+		public function api_request($args, $action, $remote_args, $api_request = NULL)
 		{
-SyncDebug::log(__METHOD__.'() action=' . $action);
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' action=' . $action);
 			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
 				return $args;
 
@@ -200,11 +200,14 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 
 					// add new post
 					$post_args = array('post_title' => 'title', 'post_content' => 'content');
-					$source_post_id = wp_insert_post($post_args);
+					$source_post_id = wp_insert_post($post_args, TRUE);
 
 					if (is_wp_error($source_post_id)) {
-						WPSiteSync_Pull::get_instance()->load_class('pullapirequest');
-						$resp->error_code(SyncPullApiRequest::ERROR_CANNOT_CREATE_NEW_POST);
+						$this->load_class('pullapirequest');
+						if (NULL !== $api_request) {
+							$resp = $api_request->get_response();
+							$resp->error_code(SyncPullApiRequest::ERROR_CANNOT_CREATE_NEW_POST);
+						}
 						return TRUE;        // return, signaling that we've handled the request
 					}
 				}

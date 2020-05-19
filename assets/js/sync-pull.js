@@ -322,7 +322,8 @@ wpsitesynccontent.pull.log('response=', response);
 					jQuery('.ui-dialog.sync-pull-search #sync-pull-search-results').html(response.data.search_results).show();
 					wpsitesynccontent.pull.clear_message();
 				} else if (0 !== response.error_code) {
-					wpsitesynccontent.pull.set_message(response.error_message, false, false, 'sync-error');
+					more = ' <a href="https://wpsitesync.com/knowledgebase/wpsitesync-pull-error-messages/#error' + response.error_code + '" target="_blank" style="text-decoration:none"><span class="dashicons dashicons-info"></span></a>';
+					wpsitesynccontent.pull.set_message(response.error_message + more, false, false, 'sync-error');
 				} else {
 wpsitesynccontent.pull.log('Failed to execute API.');
 				}
