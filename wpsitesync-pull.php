@@ -30,7 +30,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
 		const PLUGIN_VERSION = '2.2.2';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
-		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize
+		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize #@# 1.5.5
 
 		private $_license = NULL;
 		private $_push_controller = NULL;
@@ -63,8 +63,8 @@ if (!class_exists('WPSiteSync_Pull')) {
 			add_filter('spectrom_sync_active_extensions', array($this, 'filter_active_extensions'), 10, 2);
 
 			$this->_license = WPSiteSyncContent::get_instance()->get_license(); // new SyncLicensing();
-			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
-				return;
+#@#			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+#@#				return;
 
 			if (is_admin())
 				add_action('wp_loaded', array($this, 'pull_init'));
@@ -166,11 +166,12 @@ if (!class_exists('WPSiteSync_Pull')) {
 		 */
 		// TODO: logic needs to be moved to a SyncPullApiRequest class
 		// TODO: ensure only called once Sync is initialized
+		// TODO: move to SyncPullSourceApi class
 		public function api_request($args, $action, $remote_args, $api_request = NULL)
 		{
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' action=' . $action);
-			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
-				return $args;
+#@#			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+#@#				return $args;
 
 			$input = new SyncInput();
 			$model = new SyncModel();
@@ -184,7 +185,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' action=' . $action);
 //			}
 
 			if ('pullcontent' === $action) {
-SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' args=' . var_export($args, TRUE));
 				$source_post_id = $input->post_int('post_id', 0);
 				$target_post_id = $input->post_int('target_id', 0);
 				$content = $input->post('content', 'current');
@@ -201,8 +202,10 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 					// add new post
 					$post_args = array('post_title' => 'title', 'post_content' => 'content');
 					$source_post_id = wp_insert_post($post_args, TRUE);
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' inserted post ID#' . var_export($source_post_id, TRUE));
 
 					if (is_wp_error($source_post_id)) {
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' ERROR: unable to create post on Source');
 						$this->load_class('pullapirequest');
 						if (NULL !== $api_request) {
 							$resp = $api_request->get_response();
@@ -244,9 +247,8 @@ SyncDebug::log(__METHOD__.'() args=' . var_export($args, TRUE));
 				}
 
 				$args['post_id'] = $source_post_id;
-
-SyncDebug::log(__METHOD__ . '() args=' . var_export($args, TRUE));
 			}
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' args=' . var_export($args, TRUE));
 
 			// return the filter value
 			return $args;
@@ -262,8 +264,8 @@ SyncDebug::log(__METHOD__ . '() args=' . var_export($args, TRUE));
 		{
 SyncDebug::log(__METHOD__."() handling '{$action}' action");
 
-			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
-				return $return;
+#@#			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+#@#				return $return;
 
 			// handle 'pullinfo' requests
 			if ('pullinfo' === $action) {
@@ -298,14 +300,14 @@ SyncDebug::log(__METHOD__."() handling '{$action}' action");
 
 			if ('pullcontent' === $action) {
 				// TODO: move this implementation into SyncPullApiRequest class to reduce size of WPSiteSync_Pull class
-SyncDebug::log(__METHOD__.'() post data: ' . var_export($_POST, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' post data: ' . var_export($_POST, TRUE));
 				$input = new SyncInput();
 
 				$source_post_id = $input->post_int('post_id', 0);
 				$target_post_id = $input->post_int('target_id', 0);
 				$content = $input->post('content', 'current');
 
-SyncDebug::log(__METHOD__.'() source id=' . $source_post_id . ' target id=' . $target_post_id);
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' source id=' . $source_post_id . ' target id=' . $target_post_id);
 
 				// TODO: improve lookup logic
 				// TODO: if no post id, look up by name
@@ -352,7 +354,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response data=' . var_export($r
 				$input = new SyncInput();
 				$post_type = $input->post('posttype', NULL);
 				$search = $input->post('search', NULL);
-SyncDebug::log(__METHOD__ . '() post type=' . $post_type . ' search=' . $search);
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' post type=' . $post_type . ' search=' . $search);
 
 				// check api parameters
 				if (NULL === $post_type) {
@@ -470,7 +472,7 @@ SyncDebug::log(__METHOD__.'()');
 					$media_list[] = $queue_entry['data'];
 				}
 				$data['pull_media'] = $media_list;
-SyncDebug::log(__METHOD__.'() moving media queue entries: ' . var_export($media_list, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' moving media queue entries: ' . var_export($media_list, TRUE));
 				$api_request->clear_queue();
 			}
 
@@ -488,20 +490,20 @@ SyncDebug::log(__METHOD__.'() moving media queue entries: ' . var_export($media_
 SyncDebug::log(__METHOD__."('{$action}')");
 			if ('pullcontent' === $action) {
 				// TODO: check for error code
-SyncDebug::log(__METHOD__.'() response from API request: ' . var_export($response, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' response from API request: ' . var_export($response, TRUE));
 				$api_response = NULL;
 				if (isset($response->response)) {
-SyncDebug::log(__METHOD__.'() decoding response: ' . var_export($response->response, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' decoding response: ' . var_export($response->response, TRUE));
 					$api_response = $response->response;
 				}
-else SyncDebug::log(__METHOD__.'() no reponse->response element');
-SyncDebug::log(__METHOD__.'() api response body=' . var_export($api_response, TRUE));
+else SyncDebug::log(__METHOD__.'():' . __LINE__ . ' no reponse->response element');
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' api response body=' . var_export($api_response, TRUE));
 
 				if (NULL !== $api_response) {
 					$save_post = $_POST;
 
 					$site_key = $api_response->data->site_key; // $pull_data->site_key;
-SyncDebug::log(__METHOD__.'() target\'s site key: ' . $site_key);
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' target\'s site key: ' . $site_key);
 					$target_url = SyncOptions::get('target');
 
 					// copy content from API results into $_POST array to simulate call to SyncApiController
@@ -522,19 +524,21 @@ SyncDebug::log(__METHOD__.'() target\'s site key: ' . $site_key);
 						'site_key' => $site_key,
 						'source' => $target_url,
 						'response' => $response,
+						'no_response' => TRUE,
 						'auth' => 0,
 					);
 					// creating the controller object will call the 'spectrom_sync_api_process' filter to process the data
-SyncDebug::log(__METHOD__.'() creating controller with: ' . var_export($args, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' creating controller with: ' . var_export($args, TRUE));
 					add_action('spectrom_sync_push_content', array($this, 'process_push_request'), 20, 3);
-					$this->_push_controller = new SyncApiController($args);
+					$this->_push_controller = SyncApiController::get_instance($args);
+					$this->_push_controller->dispatch();
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - returned from controller');
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($response, TRUE));
 
 					// process media entries
 SyncDebug::log(__METHOD__.'(): ' . __LINE__ . ' - checking for media items');
 					if (isset($_POST['pull_media'])) {
-SyncDebug::log(__METHOD__.'() - found ' . count($_POST['pull_media']) . ' media items');
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' found ' . count($_POST['pull_media']) . ' media items');
 						$this->_handle_media(intval($_POST['target_post_id']), $_POST['pull_media'], $response);
 					}
 
@@ -550,14 +554,14 @@ SyncDebug::log(__METHOD__.'() - found ' . count($_POST['pull_media']) . ' media 
 				}
 //else SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - no response body');
 			} else if ('pullsearch' === $action) {
-SyncDebug::log(__METHOD__ . '() response from API request: ' . var_export($response, TRUE));
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' response from API request: ' . var_export($response, TRUE));
 				$api_response = NULL;
 				if (isset($response->response) && isset($response->response->data->search_results)) {
-SyncDebug::log(__METHOD__ . '() decoding response: ' . var_export($response->response, TRUE));
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' decoding response: ' . var_export($response->response, TRUE));
 					$api_response = $response->response;
 					$response->set('search_results', $response->response->data->search_results);
 				}
-SyncDebug::log(__METHOD__ . '() api response body=' . var_export($api_response, TRUE));
+SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' api response body=' . var_export($api_response, TRUE));
 			}
 		}
 
@@ -602,7 +606,7 @@ SyncDebug::log(__METHOD__ . '() api response body=' . var_export($api_response, 
 			// https://en.wikipedia.org/wiki/List_of_file_signatures
 
 			$upload_dir = wp_upload_dir();
-SyncDebug::log(__METHOD__.'() upload dir=' . var_export($upload_dir, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' upload dir=' . var_export($upload_dir, TRUE));
 			foreach ($media_items as $media_file) {
 				// check if this is the featured image
 				$featured = isset($media_file['featured']) ? intval($media_file['featured']) : 0;
@@ -613,7 +617,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' featured=' . $featured);
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' work file=' . $path . ' url=' . $media_file['img_url']);
 				file_put_contents($path, file_get_contents($media_file['img_url']));
 				$temp_name = tempnam(sys_get_temp_dir(), 'syn');
-SyncDebug::log(__METHOD__.'() temp name=' . $temp_name);
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' temp name=' . $temp_name);
 				copy($path, $temp_name);
 
 				// get just the basename - no extension - of the image being transferred
@@ -623,7 +627,7 @@ SyncDebug::log(__METHOD__.'() temp name=' . $temp_name);
 				// check file type
 				$img_type = wp_check_filetype($path);
 				$mime_type = $img_type['type'];
-SyncDebug::log(__METHOD__.'() found image type=' . $img_type['ext'] . '=' . $img_type['type']);
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' found image type=' . $img_type['ext'] . '=' . $img_type['type']);
 				// TODO: instead of explicitly checking for image and pdf, add a 'spectrom_sync_upload_media_allowed_mime_type' filter and allow PDFs
 				// TODO: resulting test should only be if (FALSE === apply_filters('spectrom_sync_upload_media_allowed_mime_type', FALSE, $img_type))
 				if ((FALSE === strpos($mime_type, 'image/') && 'pdf' !== $img_type['ext']) ||
@@ -679,11 +683,11 @@ $_POST['action'] = 'wp_handle_sideload';
 						'size' => filesize($path),
 					);
 					$_FILES['sync_file_upload'] = $file_info;
-SyncDebug::log(' files=' . var_export($_FILES, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' files=' . var_export($_FILES, TRUE));
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' sending to wp_handle_upload(): ' . var_export($file_info, TRUE));
 					$file = wp_handle_upload($file_info, $overrides, $time);
 //					$ret = media_handle_sideload($file_info, $source_post_id);
-SyncDebug::log(__METHOD__.'() returned: ' . var_export($file, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' returned: ' . var_export($file, TRUE));
 					if (!is_array($file) || isset($file['error'])) {
 //					if (is_wp_error($ret)) {
 						$has_error = TRUE;
@@ -704,11 +708,11 @@ SyncDebug::log(__METHOD__.'() returned: ' . var_export($file, TRUE));
 							'post_parent' => $source_post_id,	// post id
 							'guid' => $upload_file,
 						);
-SyncDebug::log(__METHOD__.'() insert attachment parameters: ' . var_export($attachment, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' insert attachment parameters: ' . var_export($attachment, TRUE));
 						$attach_id = wp_insert_attachment($attachment, $file['file'], $source_post_id);	// insert post attachment
-SyncDebug::log(__METHOD__."() wp_insert_attachment([..., '{$file['file']}', {$source_post_id}) returned {$attach_id}");
+SyncDebug::log(__METHOD__.'():' . __LINE__ . " wp_insert_attachment([..., '{$file['file']}', {$source_post_id}) returned {$attach_id}");
 						$attach = wp_generate_attachment_metadata($attach_id, $file['file']);	// generate metadata for new attacment
-SyncDebug::log(__METHOD__."() wp_generate_attachment_metadata({$attach_id}, '{$file['file']}') returned " . var_export($attach, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . "() wp_generate_attachment_metadata({$attach_id}, '{$file['file']}') returned " . var_export($attach, TRUE));
 						update_post_meta($attach_id, '_wp_attachment_image_alt', $media_file['attach_alt'], TRUE);
 						wp_update_attachment_metadata($attach_id, $attach);
 						$this->media_id = $attach_id;
@@ -716,7 +720,7 @@ SyncDebug::log(__METHOD__."() wp_generate_attachment_metadata({$attach_id}, '{$f
 						// if it's the featured image, set that
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' featured=' . $featured . ' source=' . $source_post_id . ' attach=' . $attach_id);
 						if ($featured && 0 !== $source_post_id) {
-SyncDebug::log(__METHOD__."() set_post_thumbnail({$source_post_id}, {$attach_id})");
+SyncDebug::log(__METHOD__.'():' . __LINE__ . " set_post_thumbnail({$source_post_id}, {$attach_id})");
 							set_post_thumbnail($source_post_id, $attach_id);
 						}
 					}
@@ -740,7 +744,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' removing work file ' . $path . ' 
 		 */
 		public function handle_upload($info, $context = '')
 		{
-SyncDebug::log(__METHOD__.'() ' . var_export($info, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . var_export($info, TRUE));
 			// TODO: use parse_url() instead
 			$parts = explode('/', $info['url']);
 			$this->local_media_name = array_pop($parts);
@@ -800,7 +804,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' controller response: ' . var_expo
 				$result = array();
 				if (isset($api_result->response->data->pull_data))
 					$result = $api_result->response->data->pull_data;
-SyncDebug::log(__METHOD__.'() api result data: ' . var_export($result, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' api result data: ' . var_export($result, TRUE));
 				$_POST['post_data'] = get_object_vars($result->post_data);	// turn this into an array
 				$_POST['action'] = 'push';					// simulate a push operation for controller->push() call
 				$controller->push($response);
@@ -820,7 +824,7 @@ SyncDebug::log(__METHOD__.'() api result data: ' . var_export($result, TRUE));
 		{
 SyncDebug::log(__METHOD__."('{$action}', {$post_id}, ...)");
 			if ('pullcontent' === $action) {
-SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - data: ' . var_export($data, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' data: ' . var_export($data, TRUE));
 				$save_post = $_POST;
 				$_POST['post_id'] = $post_id;
 				$_POST['post_data'] = $data;
@@ -832,11 +836,13 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - data: ' . var_export($data, TRU
 					'site_key' => SyncOptions::get('target_site_key'),
 					'source' => SyncOptions::get('host'),
 					'response' => $response,
+					'no_response' => TRUE,
 				);
-SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - calling SyncApiController() with arguments');
-				$controller = new SyncApiController($args);
-SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - returned from controller');
-SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($response, TRUE));
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' calling SyncApiController() with arguments');
+				$controller = SyncApiController::get_instance($args);
+				$controller->dispatch();
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' returned from controller');
+SyncDebug::log(__METHOD__.'():' . __LINE__ . ' response=' . var_export($response, TRUE));
 			}
 		}
 
@@ -904,7 +910,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - response=' . var_export($respon
 		public function filter_active_extensions($extensions, $set = FALSE)
 		{
 //SyncDebug::log(__METHOD__.'():' . __LINE__ . ' checking active extensions set=' . ($set ? 'TRUE' : 'FALSE'));
-			if ($set || $this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+#@#			if ($set || $this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
 				$extensions['sync_pull'] = array(
 					'name' => self::PLUGIN_NAME,
 					'version' => self::PLUGIN_VERSION,
