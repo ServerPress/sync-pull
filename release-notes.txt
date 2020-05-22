@@ -7,3 +7,4 @@
 * fix: Address runtime error when handling upload error messages.
 * fix: Problem with Cancel button not working.
 * enhancement: Add an "info" icon following error messages displayed in Search dialog with links to Knowledge Base article.
+* fix: Resolve PHP error that occurs when post edit list is empty.

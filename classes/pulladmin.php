@@ -476,7 +476,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 				else
 					$post_type = 'post';
 			}
-			$this->output_dialog_modal($post->ID, $post_type, $screen->base);
+			$this->output_dialog_modal(isset($post) && isset($post->ID) ? $post->ID : NULL, $post_type, $screen->base);
 		}
 	}
 
@@ -504,7 +504,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' - target post: ' . var_export($ta
 
 		if ('post' === $screen_base) {
 			echo '<div id="sync-details">';
-			if (NULL !== ($sync_data = $sync_model->get_sync_target_post($post_id, SyncOptions::get('target_site_key')))) {
+			if (NULL !== $post_id && NULL !== ($sync_data = $sync_model->get_sync_target_post($post_id, SyncOptions::get('target_site_key')))) {
 				// display associated content if it exists
 				$target_post_id = $sync_data->target_content_id;
 				$content_details = SyncAdmin::get_instance()->get_content_details();
