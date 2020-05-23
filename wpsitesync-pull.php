@@ -30,7 +30,7 @@ if (!class_exists('WPSiteSync_Pull')) {
 		const PLUGIN_NAME = 'WPSiteSync for Pull';
 		const PLUGIN_VERSION = '2.2.2';
 		const PLUGIN_KEY = '4151f50e546c7b0a53994d4c27f4cf31';
-		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize #@# 1.5.5
+		const REQUIRED_VERSION = '1.5.4';								// minimum version of WPSiteSync required for this add-on to initialize
 
 		private $_license = NULL;
 		private $_push_controller = NULL;
@@ -63,8 +63,8 @@ if (!class_exists('WPSiteSync_Pull')) {
 			add_filter('spectrom_sync_active_extensions', array($this, 'filter_active_extensions'), 10, 2);
 
 			$this->_license = WPSiteSyncContent::get_instance()->get_license(); // new SyncLicensing();
-#@#			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
-#@#				return;
+			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+				return;
 
 			if (is_admin())
 				add_action('wp_loaded', array($this, 'pull_init'));
@@ -109,6 +109,14 @@ if (!class_exists('WPSiteSync_Pull')) {
 		}
 
 		/**
+		 * Disables the plugin if WPSiteSync not installed or ACF is too old
+		 */
+		public function disable_plugin()
+		{
+			deactivate_plugins(plugin_basename(__FILE__));
+		}
+
+		/**
 		 * Callback for the 'wp_loaded' action. Used to display admin notice if WPSiteSync for Content is not activated
 		 */
 		public function wp_loaded()
@@ -117,10 +125,12 @@ if (!class_exists('WPSiteSync_Pull')) {
 			if (!class_exists('WPSiteSyncContent', FALSE) && current_user_can('activate_plugins')) {
 				if (is_admin())
 					add_action('admin_notices', array($this, 'notice_requires_wpss'));
+				add_action('admin_init', array($this, 'disable_plugin'));
 			} else {
 				// check for minimum WPSiteSync version
 				if (is_admin() && version_compare(WPSiteSyncContent::PLUGIN_VERSION, self::REQUIRED_VERSION) < 0 && current_user_can('activate_plugins')) {
 					add_action('admin_notices', array($this, 'notice_minimum_version'));
+					add_action('admin_init', array($this, 'disable_plugin'));
 				}
 			}
 		}
@@ -170,8 +180,8 @@ if (!class_exists('WPSiteSync_Pull')) {
 		public function api_request($args, $action, $remote_args, $api_request = NULL)
 		{
 SyncDebug::log(__METHOD__.'():' . __LINE__ . ' action=' . $action);
-#@#			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
-#@#				return $args;
+			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+				return $args;
 
 			$input = new SyncInput();
 			$model = new SyncModel();
@@ -264,8 +274,8 @@ SyncDebug::log(__METHOD__ . '():' . __LINE__ . ' args=' . var_export($args, TRUE
 		{
 SyncDebug::log(__METHOD__."() handling '{$action}' action");
 
-#@#			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
-#@#				return $return;
+			if (!$this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+				return $return;
 
 			// handle 'pullinfo' requests
 			if ('pullinfo' === $action) {
@@ -910,7 +920,7 @@ SyncDebug::log(__METHOD__.'():' . __LINE__ . ' response=' . var_export($response
 		public function filter_active_extensions($extensions, $set = FALSE)
 		{
 //SyncDebug::log(__METHOD__.'():' . __LINE__ . ' checking active extensions set=' . ($set ? 'TRUE' : 'FALSE'));
-#@#			if ($set || $this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
+			if ($set || $this->_license->check_license('sync_pull', self::PLUGIN_KEY, self::PLUGIN_NAME))
 				$extensions['sync_pull'] = array(
 					'name' => self::PLUGIN_NAME,
 					'version' => self::PLUGIN_VERSION,
