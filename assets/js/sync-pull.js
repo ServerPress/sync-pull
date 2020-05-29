@@ -33,11 +33,7 @@ WPSiteSyncContent_Pull.prototype.init = function()
  */
 WPSiteSyncContent_Pull.prototype.log = function(msg, data)
 {
-	if ('undefined' !== typeof(console.log)) {
-		console.log('.pull: ' + msg);
-		if ('undefined' !== typeof(data))
-			console.log(data);
-	}
+	pull_debug_out(msg, data);
 };
 
 /**
@@ -380,6 +376,35 @@ wpsitesynccontent.pull.log('sync-pull: checking content');
 });
 */
 
+/**
+ * Performs logging to the console
+ * @param {string} msg The message to be displayed
+ * @param {object} val Optional data value to output along with the message
+ */
+function pull_debug_out(msg, val)
+{
+//return;
+	if ('undefined' !== typeof(console.log)) {
+		var fn = '';
+		if (null !== pull_debug_out.caller)
+			fn = pull_debug_out.caller.name + '';
+		if (0 !== fn.length)
+			fn += '() ';
+		if ('undefined' !== typeof(val)) {
+			switch (typeof(val)) {
+			case 'string':		msg += ' "' + val + '"';						break;
+			case 'object':		msg += ' {' + JSON.stringify(val) + '}';		break;
+			case 'number':		msg += ' #' + val;								break;
+			case 'boolean':		msg += ' `' + (val ? 'true' : 'false') + '`';	break;
+			}
+			if (null === val)
+				msg += ' `null`';
+		}
+		console.log('wpss for pull: ' + fn + msg);
+	}
+};
+
+
 wpsitesynccontent.pull = new WPSiteSyncContent_Pull();
 
 jQuery(document).ready(function() {
@@ -390,13 +415,14 @@ jQuery(document).ready(function() {
 	// TODO: perform initialization on trigger response
 	jQuery(document).on('sync_api_call', function(e, push_xhr)
 	{
-wpsitesynccontent.pull.log('!sync_api_call');
+pull_debug_out('!sync_api_call');
 //		wpsitesynccontent.push_xhr.beforeSend = function (xhr, opts)
 //		{
 //			wpsitesynccontent.pull.check_modified_timestamp(xhr, opts);
 //		};
 
-		wpsitesynccontent.push_xhr.success = function(response)
+//		wpsitesynccontent.push_xhr.success = function(response)
+		wpsitesynccontent.set_pull_callback(function(response)
 		{
 			if (response.success) {
 				wpsitesynccontent.pull.set_message(jQuery('#sync-msg-pull-complete').text());
@@ -405,9 +431,9 @@ wpsitesynccontent.pull.log('!sync_api_call');
 				wpsitesynccontent.pull.set_message(response.error_message, false, true);
 			} else {
 				// TODO: display a dialog with an error message to alert the user
-wpsitesynccontent.pull.log('Failed to execute API.');
+pull_debug_out('Failed to execute API.');
 			}
-		};
+		});
 	});
 
 	// inject buttons on posts (list view) page
