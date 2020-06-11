@@ -2,7 +2,7 @@
 * enhancement: Add filters to allow add-ons to conditionally disable Pull button.
 * fix: Only display "Search for Pull" button on list pages for allowed Post Types.
 * enhancement: Update init process to use improved SyncApiController initialization mechanism.
-* enhancment: Check for minimum required version of WPSiteSync and disable if not present.
+* enhancement: Check for minimum required version of WPSiteSync and disable if not present.
 * fix: Problem with search modal not displaying in Gutenberg editor (Thanks Wessel K.)
 * fix: Address runtime error when handling upload error messages.
 * fix: Problem with Cancel button not working.
